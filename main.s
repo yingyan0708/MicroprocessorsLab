@@ -8,12 +8,13 @@ main:
 
 	org	0x100		    ; Main code starts here at address 0x100
 table:	
-	db	0x00,0x01,0x02,0x03,0x04,0x05,0x06,0x07	;Table loading with 8 bytes
+	db	0x00,0x10,0x20,0x30,0x40,0x50,0x60,0x70	;Table loading with 8 bytes
 	counter	EQU 0x10 ; Address of counter variable
 	num	EQU 8 ;counter
 	align	2 ; ensure alignment of subsequent instructions
 
 start:	
+	clrf	TRISD, A ;clears PORTD
 	clrf	TRISC, A ;clears PORTC
 	movlw	low highword(table) ; address of data in PM
 	movwf	TBLPTRU, A ; load upper bits to TBLPTRU
@@ -23,16 +24,16 @@ start:
 	movwf	TBLPTRL, A ; load low byte to TBLPTRL
 	movlw	num ; 8 bytes to read
 	movwf	counter, A ; our counter register
-	
+
 loop:
 	tblrd*+ ; move one byte from PM to TABLAT, 					
 		; increment TBLPRT
-	movff 	TABLAT, PORTC ; move read data from TABLAT to
-			    ; PORTC, increment PORTC	
+	movff 	TABLAT, PORTD ; move read data from TABLAT to
+			    ; PORTD, increment PORTD	
 	movlw	0x0f ;all bits in
 	movwf	0x20, A ;stores value in address 0x20
 	call	delay
-	decfsz	counter, A ; count down to zero
+	decfsz	counter, A ; count down to zero
 	bra	loop ; keep going until finished
 	goto	start
 	
