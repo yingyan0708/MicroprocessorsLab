@@ -2,6 +2,7 @@
 
 extrn	UART_Setup, UART_Transmit_Message  ; external subroutines
 extrn	LCD_Setup, LCD_Write_Message, LCD_clear, second_line
+extrn	KeyPad_Setup, KeyPad_Read
 	
 psect	udata_acs   ; reserve data space in access ram
 counter:    ds 1    ; reserve one byte for a counter variable
@@ -32,6 +33,7 @@ setup:
 	bcf	CFGS	; point to Flash program memory  
 	bsf	EEPGD 	; access Flash program memory
 	call	UART_Setup	; setup UART
+	call	KeyPad_Setup
 	call	LCD_Setup	; setup UART
 	goto	start
 	
@@ -60,13 +62,16 @@ loop: 	tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
 	call	LCD_Write_Message
 
 reset_button:
+	call	KeyPad_Read
 	btfss	PORTD, button
 	goto	reset_button
 	call	LCD_clear
 	call	second_line
 	goto	start
 
-	goto	$		; goto current line in code
+keypad_loop:
+	call	KeyPad_Read
+	goto	keypad_loop		; goto current line in code
 
 	
 
