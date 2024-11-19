@@ -567,6 +567,9 @@
         <property key="linker-rom" value=""/>
         <property key="linker-serial" value=""/>
       </pic-as-linker>
+      <pk4hybrid>
+        <property key="debugoptions.useswbreakpoints" value="true"/>
+      </pk4hybrid>
     </conf>
   </confs>
 </configurationDescriptor>

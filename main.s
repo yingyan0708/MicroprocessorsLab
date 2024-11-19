@@ -1,7 +1,7 @@
 #include <xc.inc>
 
 extrn	UART_Setup, UART_Transmit_Message  ; external subroutines
-extrn	LCD_Setup, LCD_Write_Message, LCD_clear, second_line
+extrn	LCD_Setup, LCD_Write_Message, LCD_clear, second_line, LCD_Send_Byte_D
 extrn	KeyPad_Setup, KeyPad_Read
 	
 psect	udata_acs   ; reserve data space in access ram
@@ -10,6 +10,7 @@ delay_count:ds 1    ; reserve one byte for counter in the delay routine
     
 psect	udata_bank4 ; reserve data anywhere in RAM (here at 0x400)
 myArray:    ds 0x80 ; reserve 128 bytes for message data
+myKeyPad:   ds 1
 
 psect	data    
 	; ******* myTable, data in programme memory, and its length *****
@@ -18,6 +19,7 @@ myTable:
 					; message, plus carriage return
 	myTable_l   EQU	13	; length of data
 	button	    EQU 0
+	myKeyPad_1  EQU 1
 	align	2
     
 psect	code, abs	
@@ -26,45 +28,56 @@ rst: 	org 0x0
 
 	; ******* Programme FLASH read Setup Code ***********************
 setup:	
-	clrf	PORTD			;clear port D
+	clrf	PORTD, A			;clear port D
 	movlw	0x01			; all bits in set RD0 as input
 	movwf 	TRISD, A		; Port D Direction Register
-
+	
 	bcf	CFGS	; point to Flash program memory  
 	bsf	EEPGD 	; access Flash program memory
 	call	UART_Setup	; setup UART
 	call	KeyPad_Setup
-	call	LCD_Setup	; setup UART
+	call	LCD_Setup	; setup LCD
 	goto	start
 	
 	; ******* Main programme ****************************************
-start: 	lfsr	0, myArray	; Load FSR0 with address in RAM	
-	movlw	low highword(myTable)	; address of data in PM
-	movwf	TBLPTRU, A		; load upper bits to TBLPTRU
-	movlw	high(myTable)	; address of data in PM
-	movwf	TBLPTRH, A		; load high byte to TBLPTRH
-	movlw	low(myTable)	; address of data in PM
-	movwf	TBLPTRL, A		; load low byte to TBLPTRL
-	movlw	myTable_l	; bytes to read
-	movwf 	counter, A		; our counter register
-loop: 	tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
-	movff	TABLAT, POSTINC0; move data from TABLAT to (FSR0), inc FSR0	
-	decfsz	counter, A		; count down to zero
-	bra	loop		; keep going until finished
+start: 	
+	;lfsr	0, myKeyPad	; Load FSR0 with address in RAM	
+	;movlw	low highword(myTable)	; address of data in PM
+	;movwf	TBLPTRU, A		; load upper bits to TBLPTRU
+	;movlw	high(myTable)	; address of data in PM
+	;movwf	TBLPTRH, A		; load high byte to TBLPTRH
+	;movlw	low(myTable)	; address of data in PM
+	;movwf	TBLPTRL, A		; load low byte to TBLPTRL
+	;movlw	myTable_l	; bytes to read
+	;movwf 	counter, A		; our counter register
 	
-	movlw	myTable_l	; output message to UART
-	lfsr	2, myArray
-	call	UART_Transmit_Message
+;loop: 	;tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
+	;movff	TABLAT, POSTINC0; move data from TABLAT to (FSR0), inc FSR0	
+	;decfsz	counter, A		; count down to zero
+	;bra	loop		; keep going until finished
+	
+	;movlw	myTable_l	; output message to UART
+	;lfsr	2, myArray
+	
+	;lfsr	2, myKeyPad
+	call	KeyPad_Read
+	call	LCD_Send_Byte_D
+	;movwf	INDF2
+	goto	start
+	;movlw	myKeyPad_1
+	;call	UART_Transmit_Message
 
-	movlw	myTable_l	; output message to LCD
-	addlw	0xff		; don't send the final carriage return to LCD
-	lfsr	2, myArray
-	call	LCD_Write_Message
+	;movlw	myTable_l	; output message to LCD
+	;addlw	0xff		; don't send the final carriage return to LCD
+	;lfsr	2, myKeyPad
+	;call	LCD_Write_Message
+	nop
+	goto	start
 
 reset_button:
-	call	KeyPad_Read
-	btfss	PORTD, button
-	goto	reset_button
+	;call	KeyPad_Read
+	;btfss	PORTD, button
+	;goto	reset_button
 	call	LCD_clear
 	call	second_line
 	goto	start
