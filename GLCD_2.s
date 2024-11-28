@@ -1,5 +1,6 @@
 #include <xc.inc>
 
+global	init_LCD, send_data
     
 RS	EQU	2 ;port B is control line
 R	EQU	3 ;RW
@@ -9,6 +10,9 @@ CS2	EQU	1
 RST	EQU	5
 
 init_LCD:
+	clrf	TRISD
+	clrf	LATD
+	clrf	LATB
 	bsf	PORTB, RST ;reset
 	call	delay
 	bcf	PORTB, RST ;end reset
@@ -24,10 +28,6 @@ init_LCD:
 	call	send_command
 	return
 
-draw_pattern:
-	movlw	0xAA
-	call	send_data
-	return
 	
 send_command: ;RS and R/W are both 0 when sending command
 	bcf	PORTB, RS ;clear
