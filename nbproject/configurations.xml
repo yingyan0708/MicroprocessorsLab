@@ -19,6 +19,7 @@
       <itemPath>GLCD_2.s</itemPath>
       <itemPath>LCD.s</itemPath>
       <itemPath>UART.s</itemPath>
+      <itemPath>GLCD_code.s</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"

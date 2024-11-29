@@ -2,7 +2,7 @@
 
 global	init_LCD, send_data
 psect	udata_acs
-	
+GLCD_counter:	ds 1	
 RS	EQU	2 ;port B is control line
 R	EQU	3 ;RW
 EN	EQU	4
@@ -39,6 +39,15 @@ send_command: ;RS and R/W are both 0 when sending command
 	call	delay
 	bcf	PORTB, EN
 	call	delay
+	return
+
+GLCD_Write_Message:	    ; Message stored at FSR2, length stored in W
+	movwf   GLCD_counter, A ;length of data
+GLCD_Loop_message:
+	movf    POSTINC2, W, A
+	call    LCD_Send_Byte_D
+	decfsz  LCD_counter, A
+	bra	LCD_Loop_message
 	return
 	
 send_data: ;when writing/sending data, RS pin is set to 1
