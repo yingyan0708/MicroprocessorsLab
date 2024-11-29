@@ -1,14 +1,16 @@
 #include <xc.inc>
 
 global	init_LCD, send_data
-    
+psect	udata_acs
+	
 RS	EQU	2 ;port B is control line
 R	EQU	3 ;RW
 EN	EQU	4
 CS1	EQU	0
 CS2	EQU	1
 RST	EQU	5
-
+	
+psect	glcd_code,class=CODE
 init_LCD:
 	clrf	TRISD
 	clrf	LATD
@@ -34,8 +36,6 @@ send_command: ;RS and R/W are both 0 when sending command
 	bcf	PORTB, R ; clear RW
 	movwf	PORTD ;store command in w, move command to port D where port D is data line
 	bsf	PORTB, EN; set Enable pin to 1
-	movlw	0xFF
-	movwf	0x20, A
 	call	delay
 	bcf	PORTB, EN
 	call	delay
@@ -46,15 +46,13 @@ send_data: ;when writing/sending data, RS pin is set to 1
 	bcf	PORTB, R
 	movwf	PORTD ;place data on port D
 	bsf	PORTB, EN; set Enable pin to 1
-	movlw	0xFF
-	movwf	0x20, A
 	call	delay
 	bcf	PORTB, EN
 	call	delay
 	return
 
 delay:
-	movlw   0xFF      ; Set the delay counter value (adjust as needed)
+	movlw   0x0F      ; Set the delay counter value (adjust as needed)
 	movwf   0x20
 delay_loop:
 	decfsz  0x20, F
