@@ -15,9 +15,9 @@ init_LCD:
 	clrf	LATB
 	bsf	PORTB, RST ;reset
 	call	delay
-	bcf	PORTB, RST ;end reset
 	bsf	PORTB, CS1 ;select left half
 	bsf	PORTB, CS2 ;select right half
+	call	delay
 	movlw	0xB8 ;set to page 0 (x-address)
 	call	send_command
 	movlw	0x40 ;set to strip 0 in page (y-address)
@@ -34,8 +34,11 @@ send_command: ;RS and R/W are both 0 when sending command
 	bcf	PORTB, R ; clear RW
 	movwf	PORTD ;store command in w, move command to port D where port D is data line
 	bsf	PORTB, EN; set Enable pin to 1
+	movlw	0xFF
+	movwf	0x20, A
 	call	delay
 	bcf	PORTB, EN
+	call	delay
 	return
 	
 send_data: ;when writing/sending data, RS pin is set to 1
@@ -43,14 +46,21 @@ send_data: ;when writing/sending data, RS pin is set to 1
 	bcf	PORTB, R
 	movwf	PORTD ;place data on port D
 	bsf	PORTB, EN; set Enable pin to 1
+	movlw	0xFF
+	movwf	0x20, A
 	call	delay
 	bcf	PORTB, EN
+	call	delay
 	return
 
 delay:
-	decfsz	0x20, F, A    ; Decrement until zero
-	bra	delay
+	movlw   0xFF      ; Set the delay counter value (adjust as needed)
+	movwf   0x20
+delay_loop:
+	decfsz  0x20, F
+	bra     delay_loop
 	return
+
 
 	
 
