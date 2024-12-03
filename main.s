@@ -16,10 +16,50 @@ setup:
 	bcf	CFGS; point to Flash program memory  
 	bsf	EEPGD ; access Flash program memory
 	call	init_LCD
+	call	clear_display
 	goto	start
 ; ******* Main programme ****************************************
-start: ;display character A
-	movlw	0xBC ;set to page 0 (x-address)
+	
+start:
+	movlw	0xB8 ;set to page 0 (x-address)
+	call	send_command
+
+	movlw	0x40 ;set to strip 0 in page (y-address)
+	call	send_command
+	
+	movlw	11111000B
+	call	send_data
+	
+	movlw	00010100B
+	call	send_data
+
+	movlw	00010010B
+	call	send_data
+	
+	movlw	00010001B
+	call	send_data
+
+	movlw	00010001B
+	call	send_data
+	
+	movlw	00010010B
+	call	send_data
+	
+	movlw	00010100B
+	call	send_data
+	
+	movlw	11111000B
+	call	send_data
+	
+	goto	halt_program
+
+halt_program:
+	; Add an infinite loop to stop the program from running
+	goto	halt_program
+	
+    
+clear_display: ;display character A
+	movlw	0xB8 ;set to page 0 (x-address)
 	call	send_command
 
 	movlw	0x40 ;set to strip 0 in page (y-address)
@@ -34,7 +74,7 @@ loop1:
 	goto	page2
 
 page2:
-	movlw	0xBB ;set to page 0 (x-address)
+	movlw	0xB9 ;set to page 0 (x-address)
 	call	send_command
 
 	movlw	0x40 ;set to strip 0 in page (y-address)
@@ -46,7 +86,7 @@ loop2:
 	call	clear
 	decfsz	count
 	bra	loop2
-	goto	start
+	return
 	
 clear:
 	movlw	0x00

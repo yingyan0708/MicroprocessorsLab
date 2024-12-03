@@ -47,13 +47,63 @@ init_LCD:
 send_command: ;RS and R/W are both 0 when sending command
 	bcf	PORTB, RS, A ;clear RS
 	nop
+	nop
 	bcf	PORTB, R, A ;clear RW
+	nop
 	nop
 	movwf	PORTD ;store command in w, move command to port D where port D is data line
 	bsf	PORTB, EN ;enable pin to 1
 	nop
 	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
 	bcf	PORTB, EN
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
 	nop
 	nop
 	return
@@ -67,7 +117,53 @@ send_data: ;when writing/sending data, RS pin is set to 1
 	bsf	PORTB, EN
 	nop
 	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
 	bcf	PORTB, EN
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
 	nop
 	nop
 	return
