@@ -27,32 +27,60 @@ start:
 
 	movlw	0x40 ; set to strip 0 in page (y-address)
 	call	send_command
-	
-	movlw	11111000B
-	call	send_data
-	
-	movlw	00010100B
-	call	send_data
-
-	movlw	00010010B
-	call	send_data
-	
-	movlw	00010001B
-	call	send_data
-
-	movlw	00010001B
-	call	send_data
-	
-	movlw	00010010B
-	call	send_data
-	
-	movlw	00010100B
-	call	send_data
-	
-	movlw	11111000B
-	call	send_data
-	
+	call	letter_A
+	call	letter_B
 	goto	halt_program
+letter_A:
+	movlw	11111000B
+	call	send_data
+	
+	movlw	00010100B
+	call	send_data
+
+	movlw	00010010B
+	call	send_data
+	
+	movlw	00010001B
+	call	send_data
+
+	movlw	00010001B
+	call	send_data
+	
+	movlw	00010010B
+	call	send_data
+	
+	movlw	00010100B
+	call	send_data
+	
+	movlw	11111000B
+	call	send_data
+	return
+
+letter_B:
+	movlw	00000000B
+	call	send_data
+	
+	movlw	11111111B
+	call	send_data
+	
+	movlw	10001001B
+	call	send_data
+	
+	movlw	10001001B
+	call	send_data
+	
+	movlw	01011010B
+	call	send_data
+	
+	movlw	00100100B
+	call	send_data
+	
+	movlw	00000000B
+	call	send_data
+	
+	movlw	00000000B
+	call	send_data
+	return
 
 halt_program:
 	; Infinite loop to halt program execution
