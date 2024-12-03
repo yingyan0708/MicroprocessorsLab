@@ -19,7 +19,7 @@ setup:
 	goto	start
 ; ******* Main programme ****************************************
 start: ;display character A
-	movlw	0xB8 ;set to page 0 (x-address)
+	movlw	0xBC ;set to page 0 (x-address)
 	call	send_command
 
 	movlw	0x40 ;set to strip 0 in page (y-address)
@@ -27,13 +27,29 @@ start: ;display character A
 	
 	movlw	0x40
 	movwf	count, A
-loop:	
-	decfsz	count
+loop1:	
 	call	clear
-	bra	loop
+	decfsz	count
+	bra	loop1
+	goto	page2
+
+page2:
+	movlw	0xBB ;set to page 0 (x-address)
+	call	send_command
+
+	movlw	0x40 ;set to strip 0 in page (y-address)
+	call	send_command
+	
+	movlw	0x40
+	movwf	count, A
+loop2:	
+	call	clear
+	decfsz	count
+	bra	loop2
+	goto	start
 	
 clear:
-	movlw	0xFF
+	movlw	0x00
 	call	send_data
 	return
 	

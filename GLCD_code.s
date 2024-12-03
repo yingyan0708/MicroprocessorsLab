@@ -37,15 +37,18 @@ init_LCD:
 	movlw	0xC0 ;start line, start from row 0 (z-address)
 	call	send_command
 
-	bcf	PORTB, CS2 
+	bcf	PORTB, CS2
 	nop
 	bsf	PORTB, CS1;ft half active
 	nop
+	
 	return
 
 send_command: ;RS and R/W are both 0 when sending command
 	bcf	PORTB, RS, A ;clear RS
+	nop
 	bcf	PORTB, R, A ;clear RW
+	nop
 	movwf	PORTD ;store command in w, move command to port D where port D is data line
 	bsf	PORTB, EN ;enable pin to 1
 	nop
@@ -57,7 +60,9 @@ send_command: ;RS and R/W are both 0 when sending command
 
 send_data: ;when writing/sending data, RS pin is set to 1
 	bsf	PORTB, RS
+	nop
 	bcf	PORTB, R
+	nop
 	movwf	PORTD ;place data on port D
 	bsf	PORTB, EN
 	nop
