@@ -3,11 +3,12 @@
 extrn	UART_Setup, UART_Transmit_Message  ; external subroutines
 extrn	LCD_Setup, LCD_Write_Message
 extrn	RTCC_Setup, RTCC_Get_Seconds,  RTCC_Get_Minutes, RTCC_Get_Hours, RTCC_Get_Weekday, RTCC_Get_Day, RTCC_Get_Month, RTCC_Get_Year, RTCC_alarm_get_minutes
-
+extrn	low_nibble_ASCII, high_nibble_ASCII
 	
 psect	udata_acs   ; reserve data space in access ram
 counter:    ds 1    ; reserve one byte for a counter variable
 delay_count:ds 1    ; reserve one byte for counter in the delay routine
+colons:	    ds 1
     
 psect	udata_bank4 ; reserve data anywhere in RAM (here at 0x400)
 myArray:    ds 0x80 ; reserve 128 bytes for message data
@@ -44,35 +45,16 @@ setup:	bcf	CFGS	; point to Flash program memory
 	call	RTCC_Setup	; setup RTCC
 	clrf	TRISD, A	; set portD as digital output for seconds display
 	clrf	TRISE, A
-	clrf	TRISH, A    ;set PORTF as output for alarm interrupt
-	goto	start
+	goto	loop_clock_read
 	
 	; ******* Main programme ****************************************
-start: 	lfsr	0, myArray	; Load FSR0 with address in RAM	
-	movlw	low highword(myTable)	; address of data in PM
-	movwf	TBLPTRU, A		; load upper bits to TBLPTRU
-	movlw	high(myTable)	; address of data in PM
-	movwf	TBLPTRH, A		; load high byte to TBLPTRH
-	movlw	low(myTable)	; address of data in PM
-	movwf	TBLPTRL, A		; load low byte to TBLPTRL
-	movlw	myTable_l	; bytes to read
-	movwf 	counter, A		; our counter register
-loop: 	tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
-	movff	TABLAT, POSTINC0; move data from TABLAT to (FSR0), inc FSR0	
-	decfsz	counter, A		; count down to zero
-	bra	loop		; keep going until finished
-		
-
 loop_clock_read:
 	call	RTCC_Get_Minutes    ; returns seconds value in W
 	movwf	PORTD, A	    ; write value out to PORTD 
 	call	RTCC_Get_Seconds
 	movwf	PORTE, A
-	call	RTCC_alarm_get_minutes
-	movwf	PORTH, A
 	goto	loop_clock_read	    ; goto loop_clock_read
 	
-
 	; a delay subroutine if you need one, times around loop in delay_count
 delay:	decfsz	delay_count, A	; decrement until zero
 	bra	delay
@@ -85,15 +67,28 @@ RTCC_ISR: ;RTCC interrupt service routine
 	;
 	bcf	PIR3, 0 ;clear alarm interrupt flag
 	;perform action
-	movlw	myTable_l	; output message to UART
+	lfsr	0, myArray	; Load FSR0 with address in RAM	
+	call	RTCC_Get_Minutes    ; returns minutes value in W
+	call	bcd_to_ascii ;convert BCD to ASCII
+	movff	high_nibble_ASCII, myArray 
+	movff	low_nibble_ASCII, myArray + 1
+	
+	movlw	0x3A	;ascii code for :
+	movwf	colons, A
+	movff	colons, myArray + 2
+	
+	call	RTCC_Get_Seconds
+	call	bcd_to_ascii
+	movff	high_nibble_ASCII, myArray + 3
+	movff	low_nibble_ASCII, myArray + 4
+	
+	movlw	5
 	lfsr	2, myArray
 	call	UART_Transmit_Message
 
-	movlw	myTable_l	; output message to LCD
-	addlw	0xff		; don't send the final carriage return to LCD
+	movlw	5
 	lfsr	2, myArray
 	call	LCD_Write_Message
 
 	retfie  f ;return from interrupt
-;
 	end	rst

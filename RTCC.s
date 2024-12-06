@@ -163,7 +163,7 @@ RTCC_set_month:
     return
     
     
-    
+;setting alarm for interrupt    
 RTCC_Alarm_Setup:
     banksel ALRMRPT
     banksel ALRMCFG
@@ -182,14 +182,19 @@ RTCC_Alarm_Setup:
     return
     
 
-RTCC_alarm_set_seconds:
+RTCC_alarm_set_seconds: ;set the intial alarm - seconds
+    ;unlock RTCC
+    movlw   0x55    ;first unlock key
+    movwf   EECON2
+    movlw   0xAA    ;second unlock key
+    movwf   EECON2
     banksel RTCCFG
     banksel ALRMCFG
-    bsf	    RTCCFG, 5, B ;enable RTCWREN
-    bcf	    ALRMPTR1 ;
-    bcf	    ALRMPTR0 ;
+    bsf	    RTCCFG, 5, B ;enable RTCWREN to write alarm register
+    bcf	    ALRMPTR1 ;clear ALRMPTR1 and 0 for alarm minutes and seconds
+    bcf	    ALRMPTR0 
     movlw   00000000B
-    movwf   ALRMVALL, B   ; set seconds for ALRMVALL
+    movwf   ALRMVALL, B   ; set seconds to 0
     return
     
 RTCC_alarm_set_minutes:
@@ -223,7 +228,7 @@ RTCC_alarm_set_hours:
     bcf	    ALRMPTR1 ;
     bsf	    ALRMPTR0 ;
     movlw   00010101B ;set 15:00
-    movwf   RTCVALL, B   ; set hours for ALRMVALL
+    movwf   ALRMVALL, B   ; set hours for ALRMVALL
     return
     
 RTCC_alarm_set_weekday:
@@ -233,7 +238,7 @@ RTCC_alarm_set_weekday:
     bcf	    ALRMPTR1 ;
     bsf	    ALRMPTR0 ;
     movlw   00000101B ;set weekday to friday
-    movwf   RTCVALH, B   ; set weekday for ALRMVALH
+    movwf   ALRMVALH, B   ; set weekday for ALRMVALH
     return
     
 RTCC_alarm_set_day:
@@ -243,7 +248,7 @@ RTCC_alarm_set_day:
     bsf	    ALRMPTR1 ;
     bcf	    ALRMPTR0 ;
     movlw   00000110B ; set day to 6th
-    movwf   RTCVALL, B   ; set day for ALRMVALL
+    movwf   ALRMVALL, B   ; set day for ALRMVALL
     return
     
 RTCC_alarm_set_month:
@@ -253,7 +258,7 @@ RTCC_alarm_set_month:
     bsf	    ALRMPTR1 ;set bit 1, clear bit 0
     bcf	    ALRMPTR0 
     movlw   00010010B ;set december month
-    movwf   RTCVALH, B   ; set month for ALRMVALH
+    movwf   ALRMVALH, B   ; set month for ALRMVALH
     return
     
     
