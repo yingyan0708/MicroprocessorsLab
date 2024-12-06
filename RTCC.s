@@ -19,10 +19,10 @@ RTCC_Setup:
     bsf	    RTSECSEL1	; RTSECSELx bits determine output on RTCC pin
     bcf	    RTSECSEL0	; 10 outputs the source clock, 01 outputs second count
     bsf	    RTCCFG, 2, B ;enable RTCOE
+    call    RTCC_Alarm_Setup
     bcf	    RTCCFG, 5, B ;disable RTCWREN
     bsf	    RTSECSEL1	; RTSECSELx bits determine output on RTCC pin
     bcf	    RTSECSEL0	; 10 outputs the source clock, 01 outputs second count
-    ;call    RTCC_Alarm_Setup
     movlb   0		; reset BSR to 0
     return
 
@@ -189,7 +189,7 @@ RTCC_alarm_set_seconds:
     bcf	    ALRMPTR1 ;
     bcf	    ALRMPTR0 ;
     movlw   00000000B
-    movwf   RTCVALL, B   ; set seconds for ALRMVALL
+    movwf   ALRMVALL, B   ; set seconds for ALRMVALL
     return
     
 RTCC_alarm_set_minutes:
@@ -199,18 +199,19 @@ RTCC_alarm_set_minutes:
     movwf   EECON2
     banksel RTCCFG
     banksel ALRMCFG
+    bcf	    RTCCFG, 5, B ;enable RTCWREN
     bcf	    ALRMPTR1 ;
     bcf	    ALRMPTR0 ;
     movlw   01001001B
-    movwf   RTCVALH, B   ; set minutes for ALRMVALH
+    movwf   ALRMVALH, B   ; set minutes for ALRMVALH
     return
 
 RTCC_alarm_get_minutes:
     banksel RTCCFG
     banksel ALRMCFG
     bcf	    ALRMPTR1 ;
-    bsf	    ALRMPTR0 ;
-    movf    RTCVALL, W, B   ; Read minutes from RTCVALH 
+    bcf	    ALRMPTR0 ;
+    movf    ALRMVALH, W, B   ; Read minutes from RTCVALH 
     movlb   0		; reset BSR to 0
     return
  

@@ -14,8 +14,8 @@
                    projectFiles="true">
       <itemPath>main.s</itemPath>
       <itemPath>config.s</itemPath>
-      <itemPath>UART.s</itemPath>
       <itemPath>RTCC.s</itemPath>
+      <itemPath>UART.s</itemPath>
       <itemPath>LCD.s</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
