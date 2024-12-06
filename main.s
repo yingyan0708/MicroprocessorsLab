@@ -2,7 +2,7 @@
 
 extrn	UART_Setup, UART_Transmit_Message  ; external subroutines
 extrn	LCD_Setup, LCD_Write_Message
-extrn	RTCC_Setup, RTCC_Get_Seconds, RTCC_seconds
+extrn	RTCC_Setup, RTCC_Get_Seconds,  RTCC_Get_Minutes
 
 	
 psect	udata_acs   ; reserve data space in access ram
@@ -31,6 +31,7 @@ setup:	bcf	CFGS	; point to Flash program memory
 	call	LCD_Setup	; setup UART
 	call	RTCC_Setup	; setup RTCC
 	clrf	TRISD, A	; set portD as digital output for seconds display
+	clrf	TRISE, A
 	goto	start
 	
 	; ******* Main programme ****************************************
@@ -58,8 +59,10 @@ loop: 	tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
 	call	LCD_Write_Message
 
 loop_clock_read:
-	call	RTCC_Get_Seconds    ; returns seconds value in W
+	call	RTCC_Get_Minutes    ; returns seconds value in W
 	movwf	PORTD, A	    ; write value out to PORTD 
+	call	RTCC_Get_Seconds
+	movwf	PORTE, A
 	goto	loop_clock_read	    ; goto loop_clock_read
 
 	; a delay subroutine if you need one, times around loop in delay_count
