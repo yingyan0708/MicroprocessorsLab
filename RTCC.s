@@ -21,6 +21,7 @@ RTCC_Setup:
     bsf	    RTCCFG, 2, B ;enable RTCOE
     call    RTCC_set_Seconds
     call    RTCC_set_Minutes
+    call    RTCC_set_hours
     bcf	    RTCCFG, 5, B ;disable RTCWREN
     bsf	    RTSECSEL1	; RTSECSELx bits determine output on RTCC pin
     bcf	    RTSECSEL0	; 10 outputs the source clock, 01 outputs second count
@@ -64,7 +65,7 @@ RTCC_set_Minutes:
     bsf	    RTCCFG, 5, B ;enable RTCWREN
     bcf	    RTCPTR1	; Clear RTCPTR1 and RTCPTR0 for seconds output
     bcf	    RTCPTR0
-    movlw   01010100B
+    movlw   00110010B
     movwf   RTCVALH, B   ; Read minutes from RTCVALH 
     return
     
@@ -73,7 +74,7 @@ RTCC_set_hours:
     bsf	    RTCCFG, 5, B ;enable RTCWREN
     bcf	    RTCPTR1	; Clear RTCPTR1 and RTCPTR0 for seconds output
     bsf	    RTCPTR0
-    movlw   00010000B
+    movlw   00010001B
     movwf   RTCVALL, B   ; Read minutes from RTCVALH 
     return
     
