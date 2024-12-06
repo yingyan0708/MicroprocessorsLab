@@ -23,15 +23,28 @@ myTable:
 psect	code, abs	
 rst: 	org 0x0
  	goto	setup
+	
+;int:	org 0x0008
+	;goto	RTCC_ISR
 
 	; ******* Programme FLASH read Setup Code ***********************
 setup:	bcf	CFGS	; point to Flash program memory  
 	bsf	EEPGD 	; access Flash program memory
+	;interrupt
+	;banksel INTCON
+	;bsf	INTCON, 7	;enable global interrupt
+	;bsf	INTCON, 6 ;enable peripheral interrupt
+	;banksel PIE3
+	;bsf	PIE3, 0  ;enable RTCC alarm interrupt
+	;banksel PIR3
+	;bcf	PIR3, 0  ;clear RTCC interrupt flag
+	;
 	call	UART_Setup	; setup UART
 	call	LCD_Setup	; setup UART
 	call	RTCC_Setup	; setup RTCC
-	clrf	TRISD, A	; set portD as digital output for seconds display
-	clrf	TRISE, A
+	;clrf	TRISD, A	; set portD as digital output for seconds display
+	;clrf	TRISE, A
+	;clrf	TRISF, A    ;set PORTF as output for alarm interrupt
 	goto	start
 	
 	; ******* Main programme ****************************************
@@ -57,6 +70,8 @@ loop: 	tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
 	addlw	0xff		; don't send the final carriage return to LCD
 	lfsr	2, myArray
 	call	LCD_Write_Message
+	goto	$
+
 
 loop_clock_read:
 	call	RTCC_Get_Minutes    ; returns seconds value in W
@@ -70,4 +85,15 @@ delay:	decfsz	delay_count, A	; decrement until zero
 	bra	delay
 	return
 
+;RTCC_ISR: ;RTCC interrupt service routine
+	;banksel	PIR3
+	;btfss	PIR3, 0 ;bit test file, skip if alarm interrupt flag is set
+	;retfie	f ;return from interrupt
+	;
+	;bcf	PIR3, 0 ;clear alarm interrupt flag
+	;perform action
+	;bcf	PORTF, 0
+	;bsf	PORTF, 0
+	;retfie  f ;return from interrupt
+;
 	end	rst

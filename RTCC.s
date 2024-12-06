@@ -19,12 +19,10 @@ RTCC_Setup:
     bsf	    RTSECSEL1	; RTSECSELx bits determine output on RTCC pin
     bcf	    RTSECSEL0	; 10 outputs the source clock, 01 outputs second count
     bsf	    RTCCFG, 2, B ;enable RTCOE
-    call    RTCC_set_Seconds
-    call    RTCC_set_Minutes
-    call    RTCC_set_hours
     bcf	    RTCCFG, 5, B ;disable RTCWREN
     bsf	    RTSECSEL1	; RTSECSELx bits determine output on RTCC pin
     bcf	    RTSECSEL0	; 10 outputs the source clock, 01 outputs second count
+    call    RTCC_Alarm_Setup
     movlb   0		; reset BSR to 0
     return
 
@@ -51,7 +49,11 @@ RTCC_Get_Minutes:	; Reads and stores seconds value in RTCC_Seconds
     movlb   0		; reset BSR to 0
     return
 
-RTCC_set_Seconds:
+RTCC_set_seconds:
+    movlw   0x55    ;first unlock key
+    movwf   EECON2
+    movlw   0xAA
+    movwf   EECON2
     banksel RTCCFG
     bcf	    RTCCFG, 5, B ;enable RTCWREN
     bcf	    RTCPTR1	; Clear RTCPTR1 and RTCPTR0 for seconds output
@@ -60,7 +62,11 @@ RTCC_set_Seconds:
     movwf   RTCVALL, B   ; Read minutes from RTCVALH 
     return
     
-RTCC_set_Minutes:
+RTCC_set_minutes:
+    movlw   0x55    ;first unlock key
+    movwf   EECON2
+    movlw   0xAA
+    movwf   EECON2
     banksel RTCCFG
     bsf	    RTCCFG, 5, B ;enable RTCWREN
     bcf	    RTCPTR1	; Clear RTCPTR1 and RTCPTR0 for seconds output
@@ -74,8 +80,8 @@ RTCC_set_hours:
     bsf	    RTCCFG, 5, B ;enable RTCWREN
     bcf	    RTCPTR1	; Clear RTCPTR1 and RTCPTR0 for seconds output
     bsf	    RTCPTR0
-    movlw   00010001B
-    movwf   RTCVALL, B   ; Read minutes from RTCVALH 
+    movlw   00010011B
+    movwf   RTCVALL, B   ; set hours from RTCVALH 
     return
     
 RTCC_set_day:
@@ -95,5 +101,83 @@ RTCC_set_month:
     movlw   00010010B
     movwf   RTCVALH, B   ; Read minutes from RTCVALH 
     return
+    
+    
+    
+RTCC_Alarm_Setup:
+    banksel ALRMRPT
+    banksel ALRMCFG
+    movlw   11001100B ;enable alarm,enable chime to allow roll over from 00h to FFh, mask alarm to interrupt every 10 minutes 0100
+    movwf   ALRMCFG, B
+    movlw   0x00    
+    movwf   ALRMRPT, B ;alarm will not repeat
+    ;setup alarm
+    bcf	    ALRMCFG, 7 ;disable alarm to change alarm values
+    call    RTCC_alarm_set_seconds
+    call    RTCC_alarm_set_minutes
+    call    RTCC_alarm_set_hours
+    call    RTCC_alarm_set_weekday
+    call    RTCC_alarm_set_day
+    call    RTCC_alarm_set_month
+    return
+    
+
+RTCC_alarm_set_seconds:
+    banksel RTCCFG
+    banksel ALRMCFG
+    bsf	    RTCCFG, 5, B ;enable RTCWREN
+    bcf	    ALRMPTR1 ;
+    bcf	    ALRMPTR0 ;
+    movlw   00000000B
+    movwf   RTCVALL, B   ; set seconds for ALRMVALL
+    
+    
+RTCC_alarm_set_minutes:
+    banksel RTCCFG
+    banksel ALRMCFG
+    bsf	    RTCCFG, 5, B ;enable RTCWREN
+    bcf	    ALRMPTR1 ;
+    bcf	    ALRMPTR0 ;
+    movlw   00000000B
+    movwf   RTCVALH, B   ; set minutes for ALRMVALH
+    
+RTCC_alarm_set_hours:
+    banksel RTCCFG
+    banksel ALRMCFG
+    bsf	    RTCCFG, 5, B ;enable RTCWREN
+    bcf	    ALRMPTR1 ;
+    bsf	    ALRMPTR0 ;
+    movlw   00010101B ;set 15:00
+    movwf   RTCVALL, B   ; set hours for ALRMVALL
+    
+RTCC_alarm_set_weekday:
+    banksel RTCCFG
+    banksel ALRMCFG
+    bsf	    RTCCFG, 5, B ;enable RTCWREN
+    bcf	    ALRMPTR1 ;
+    bsf	    ALRMPTR0 ;
+    movlw   00000101B ;set weekday to friday
+    movwf   RTCVALH, B   ; set weekday for ALRMVALH
+    
+RTCC_alarm_set_day:
+    banksel RTCCFG
+    banksel ALRMCFG
+    bsf	    RTCCFG, 5, B ;enable RTCWREN
+    bsf	    ALRMPTR1 ;
+    bcf	    ALRMPTR0 ;
+    movlw   00000110B ; set day to 6th
+    movwf   RTCVALL, B   ; set day for ALRMVALL
+    
+RTCC_alarm_set_month:
+    banksel RTCCFG
+    banksel ALRMCFG
+    bsf	    RTCCFG, 5, B ;enable RTCWREN
+    bsf	    ALRMPTR1 ;set bit 1, clear bit 0
+    bcf	    ALRMPTR0 
+    movlw   00010010B ;set december month
+    movwf   RTCVALH, B   ; set month for ALRMVALH
+    
+    
+    
     
     
