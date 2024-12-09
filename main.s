@@ -4,7 +4,8 @@ extrn	UART_Setup, UART_Transmit_Message  ; external subroutines
 extrn	LCD_Setup, LCD_Write_Message, first_line, second_line
 extrn	RTCC_Setup, RTCC_Get_Seconds,  RTCC_Get_Minutes, RTCC_Get_Hours, RTCC_Get_Weekday, RTCC_Get_Day, RTCC_Get_Month, RTCC_Get_Year, RTCC_alarm_get_minutes
 extrn	low_nibble_ASCII, high_nibble_ASCII, bcd_to_ascii
-	
+extrn	ADC_Setup, ADC_Read, multiplication, mul24and8, RES3, RES0, RES1, RES2,  ARG2H, ARG2L, NRES0, NRES1, NRES2, NRES3	   ; external ADC subroutines
+    
 psect	udata_acs   ; reserve data space in access ram
 counter:    ds 1    ; reserve one byte for a counter variable
 delay_count:ds 1    ; reserve one byte for counter in the delay routine
@@ -47,9 +48,12 @@ setup:	bcf	CFGS	; point to Flash program memory
 	call	RTCC_Setup	; setup RTCC
 	clrf	TRISD, A	; set portD as digital output for seconds display
 	clrf	TRISE, A
-	goto	loop_clock_read
+	goto	loop
 	
 	; ******* Main programme ****************************************
+loop:
+	goto	loop
+
 loop_clock_read:
 	call	first_line
 	;read year
@@ -103,18 +107,36 @@ loop_clock_read:
 	call	bcd_to_ascii
 	movff	high_nibble_ASCII, myArray + 7
 	movff	low_nibble_ASCII, myArray + 8
+	
+	movlw	0x20
+	movwf	spaces
+	movff	spaces, myArray + 9
 	;just to print alarm value
-	call	RTCC_alarm_get_minutes
-	call	bcd_to_ascii
-	movff	high_nibble_ASCII, myArray + 9
-	movff	low_nibble_ASCII, myArray + 10
-
-	movlw	11
+	;call	RTCC_alarm_get_minutes
+	;call	bcd_to_ascii
+	;movff	high_nibble_ASCII, myArray + 9
+	;movff	low_nibble_ASCII, myArray + 10
+	call	ADC_Read
+	call    multiplication
+	call	mul24and8
+	movlw	0x30
+	addwf	RES3, F, A
+	movff	RES3, myArray + 10
+	call	mul24and8
+	movlw	0x30
+	addwf	RES3, F, A
+	movff	RES3, myArray + 11
+	call	mul24and8
+	movlw	0x30
+	addwf	RES3, F, A
+	movff	RES3, myArray + 12
+	
+	movlw	12
 	lfsr	2, myArray
 	call	LCD_Write_Message
 	;movwf	PORTD, A	    ; write value out to PORTD 
 	;movwf	PORTE, A
-	goto	loop_clock_read	    ; goto loop_clock_read
+	return
 	
 	; a delay subroutine if you need one, times around loop in delay_count
 delay:	decfsz	delay_count, A	; decrement until zero
@@ -129,5 +151,6 @@ RTCC_ISR: ;RTCC interrupt service routine
 	bcf	PIR3, 0 ;clear alarm interrupt flag
 	;perform action
 	incf	LATD, F, A	; increment PORTD
+	call	loop_clock_read
 	retfie  f ;return from interrupt
 	end	rst

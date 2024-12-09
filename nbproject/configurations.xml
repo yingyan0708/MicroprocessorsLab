@@ -18,6 +18,7 @@
       <itemPath>UART.s</itemPath>
       <itemPath>LCD.s</itemPath>
       <itemPath>Read_RTCC.s</itemPath>
+      <itemPath>ADC.s</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
