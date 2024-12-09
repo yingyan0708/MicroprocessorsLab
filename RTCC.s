@@ -217,7 +217,7 @@ RTCC_alarm_set_minutes:
     bcf	    RTCCFG, 5, B ;enable RTCWREN
     bcf	    ALRMPTR1 ;
     bcf	    ALRMPTR0 ;
-    movlw   00101001B
+    movlw   00110010B
     movwf   ALRMVALH, B   ; set minutes for ALRMVALH
     return
 

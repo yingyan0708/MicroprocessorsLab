@@ -131,7 +131,7 @@ loop_clock_read:
 	addwf	RES3, F, A
 	movff	RES3, myArray + 12
 	
-	movlw	12
+	movlw	13
 	lfsr	2, myArray
 	call	LCD_Write_Message
 	;movwf	PORTD, A	    ; write value out to PORTD 
