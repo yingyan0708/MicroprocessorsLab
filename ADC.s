@@ -12,7 +12,8 @@ RES3:	  ds 1    ; reserve 4 bytes
 NRES0:	  ds 1    ; reserve 4 bytes 
 NRES1:	  ds 1    ; reserve 4 bytes 
 NRES2:	  ds 1    ; reserve 4 bytes 
-NRES3:	  ds 1    ; reserve 4 bytes 
+NRES3:	  ds 1    ; reserve 4 bytes
+k_val:	  ds 1	  ; reserve 4 bytes
     
 psect	adc_code, class=CODE
     
@@ -30,7 +31,7 @@ ADC_Setup:
 	return
 	
 multiplication:
-	movlw	0x418A
+	;movlw	0x418A
 	andlw	0xFF
 	movwf	ARG2L, A
 	movlw   high(0x418A)
@@ -100,6 +101,7 @@ adc_loop:
 	btfsc   GO	    ; check to see if finished
 	bra	adc_loop
 	return
+	
 
 end
 
