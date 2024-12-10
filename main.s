@@ -71,35 +71,28 @@ loop: 	;tblrd*+			; one byte from PM to TABLAT, increment TBLPRT
 measure_loop:
 	call	first_line
 	call	ADC_Read
-	call	RTCC_Get_Seconds
 	call    multiplication
-	;movlw	0x30
-	;addwf	RES3, F, A
-	;movff	RES3, myArray
+	movlw	0x30
+	addwf	RES3, F, A
+	movff	RES3, myArray
 	call	mul24and8
 	movlw	0x30
 	addwf	RES3, F, A
-	movff	RES3, myArray 
+	movff	RES3, myArray +1
 	call	mul24and8
 	movlw	0x30
 	addwf	RES3, F, A
-	movff	RES3, myArray + 1
+	movff	RES3, myArray + 2
 	;movlw	0x2E
 	;movwf	dot, A
 	;movff	dot, myArray + 3
 	call	mul24and8
 	movlw	0x30
 	addwf	RES3, F, A
-	movff	RES3, myArray + 2
+	movff	RES3, myArray + 3
 	
 
-	;movlw	0x30
-	;addwf	RTCC_secondsL,F, A	
-	;movff	ascii_high, myArray + 5
-	;
-	;movlw	0x30
-	;movff	ascii_low, myArray + 6
-	movlw	3
+	movlw	4
 	lfsr	2, myArray
 	call	LCD_Write_Message
 	call	UART_Transmit_Message
