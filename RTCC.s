@@ -118,7 +118,7 @@ RTCC_set_minutes:
     bsf	    RTCCFG, 5, B ;enable RTCWREN
     bcf	    RTCPTR1	; Clear RTCPTR1 and RTCPTR0 for seconds output
     bcf	    RTCPTR0
-    movlw   01010000B
+    movlw   00100101B
     movwf   RTCVALH, B   ; Read minutes from RTCVALH 
     return
     
@@ -127,7 +127,7 @@ RTCC_set_hours:
     bsf	    RTCCFG, 5, B ;enable RTCWREN
     bcf	    RTCPTR1	; Clear RTCPTR1 and RTCPTR0 for seconds output
     bsf	    RTCPTR0
-    movlw   00010001B
+    movlw   00010000B
     movwf   RTCVALL, B   ; set hours from RTCVALH 
     return
     
@@ -136,7 +136,7 @@ RTCC_set_day:
     bsf	    RTCCFG, 5, B ;enable RTCWREN
     bsf	    RTCPTR1	; Clear RTCPTR1 and RTCPTR0 for seconds output
     bcf	    RTCPTR0
-    movlw   00001001B
+    movlw   00010000B
     movwf   RTCVALL, B   ; Read minutes from RTCVALH 
     return
     
@@ -149,7 +149,7 @@ RTCC_set_weekday:
     bsf	    RTCCFG, 5, B ;enable RTCWREN
     bcf	    RTCPTR1	; Clear RTCPTR1 and RTCPTR0 for seconds output
     bsf	    RTCPTR0
-    movlw   00000001B
+    movlw   00000010B
     movwf   RTCVALH, B   ; Read minutes from RTCVALH 
     return
     

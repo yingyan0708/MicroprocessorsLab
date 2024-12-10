@@ -20,6 +20,7 @@
       <itemPath>ADC.s</itemPath>
       <itemPath>Read_RTCC.s</itemPath>
       <itemPath>Buzzer.s</itemPath>
+      <itemPath>Data_logger.s</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -40,7 +41,7 @@
         <targetPluginBoard></targetPluginBoard>
         <platformTool>pk4hybrid</platformTool>
         <languageToolchain>pic-as</languageToolchain>
-        <languageToolchainVersion>2.32</languageToolchainVersion>
+        <languageToolchainVersion>2.45</languageToolchainVersion>
         <platform>3</platform>
       </toolsSet>
       <packs>

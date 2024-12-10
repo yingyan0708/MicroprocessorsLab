@@ -31,7 +31,7 @@ ADC_Setup:
 	return
 	
 multiplication:
-	;movlw	0x418A
+	movlw	0x418A
 	andlw	0xFF
 	movwf	ARG2L, A
 	movlw   high(0x418A)

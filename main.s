@@ -5,6 +5,8 @@ extrn	LCD_Setup, LCD_Write_Message, first_line, second_line
 extrn	RTCC_Setup, RTCC_Get_Seconds,  RTCC_Get_Minutes, RTCC_Get_Hours, RTCC_Get_Weekday, RTCC_Get_Day, RTCC_Get_Month, RTCC_Get_Year, RTCC_alarm_get_minutes
 extrn	low_nibble_ASCII, high_nibble_ASCII, bcd_to_ascii
 extrn	ADC_Setup, ADC_Read, multiplication, mul24and8, RES3, RES0, RES1, RES2,  ARG2H, ARG2L, NRES0, NRES1, NRES2, NRES3	   ; external ADC subroutines
+extrn	data_logger, temp_data
+extrn	PWM_Setup
     
 psect	udata_acs   ; reserve data space in access ram
 counter:    ds 1    ; reserve one byte for a counter variable
@@ -138,9 +140,13 @@ RTCC_ISR: ;RTCC interrupt service routine
 	bcf	PIR3, 0, A ;clear alarm interrupt flag
 	;perform action
 	incf	LATD, F, A	; increment PORTD
+	;call	PWM_Setup
 	call	loop_clock_read
 	call	ADC_Read
-	movlw	0x418A		; original k value for decimal conversion
+	;movff	RES3, temp_data
+	;call	data_logger
+	;nop
+	;movlw	0x418A		; original k value for decimal conversion
 	call    multiplication
 	call	mul24and8
 	;movlw	0x0043		; scaling factor for temperature conversion
@@ -164,5 +170,6 @@ RTCC_ISR: ;RTCC interrupt service routine
 	movlw	13
 	lfsr	2, myArray
 	call	LCD_Write_Message
+	
 	retfie  f ;return from interrupt
 	end	rst 
