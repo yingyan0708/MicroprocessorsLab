@@ -52,6 +52,7 @@ setup:	bcf	CFGS	; point to Flash program memory
 	call	ADC_Setup
 	clrf	TRISD, A	; set portD as digital output for seconds display
 	clrf	TRISE, A
+	call	PWM_Setup
 	;clrf	TRISA, A
 	;clrf	LATA, A
 	goto	loop
@@ -140,7 +141,7 @@ RTCC_ISR: ;RTCC interrupt service routine
 	bcf	PIR3, 0, A ;clear alarm interrupt flag
 	;perform action
 	incf	LATD, F, A	; increment PORTD
-	;call	PWM_Setup
+	;
 	call	loop_clock_read
 	call	ADC_Read
 	;movff	RES3, temp_data
