@@ -19,8 +19,8 @@
       <itemPath>LCD.s</itemPath>
       <itemPath>ADC.s</itemPath>
       <itemPath>Read_RTCC.s</itemPath>
-      <itemPath>Buzzer.s</itemPath>
       <itemPath>Data_logger.s</itemPath>
+      <itemPath>Buzzer.s</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
