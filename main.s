@@ -66,8 +66,18 @@ setup:	bcf	CFGS	; point to Flash program memory
 	; ******* Main programme ****************************************
 loop:	
 	call	ADC_Read
+	movlw	0x01          ; Load high byte of 0x12C (0x012C)
+        cpfslt	ADRESH       ; Compare ADRESH with 0x01, skip if ADRESH < 0x01
+	call	check_ADRESL
 	goto	loop
 
+check_ADRESL:
+	movlw	0x2C
+	cpfslt	ADRESL  ; Compare ADRESL with 0x2C, skip if ADRESH < 0x2C
+	call	Buzzer
+	return
+	
+	
 loop_clock_read:
 	call	first_line
 	;read year
@@ -105,6 +115,10 @@ loop_clock_read:
 	call	bcd_to_ascii ;convert BCD to ASCII
 	movff	high_nibble_ASCII, myArray 
 	movff	low_nibble_ASCII, myArray + 1
+	
+	;lfsr	0, dataArray
+	;movff	high_nibble_ASCII, POSTINC0
+	;movff	low_nibble_ASCII, POSTINC0
 	
 	movlw	0x3A	;ascii code for :
 	movwf	colons, A
@@ -177,11 +191,13 @@ RTCC_ISR: ;RTCC interrupt service routine
 	movlw	13
 	lfsr	2, myArray
 	call	LCD_Write_Message
+	
+	retfie  f ;return from interrupt
+	
+Buzzer:
 	bsf	LATH, 0           ; Set RB0 HIGH (turn ON buzzer)
         call	DELAY            ; Wait for a period
         bcf	LATH, 0           ; Set RB0 LOW (turn OFF buzzer)
-	
-	retfie  f ;return from interrupt
 	
 DELAY:
 	MOVLW 0x3D            ; Outermost loop count (~61 iterations)
