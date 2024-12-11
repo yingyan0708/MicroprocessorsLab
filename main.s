@@ -6,7 +6,7 @@ extrn	RTCC_Setup, RTCC_Get_Seconds,  RTCC_Get_Minutes, RTCC_Get_Hours, RTCC_Get_
 extrn	low_nibble_ASCII, high_nibble_ASCII, bcd_to_ascii
 extrn	ADC_Setup, ADC_Read, multiplication, mul24and8, RES3, RES0, RES1, RES2,  ARG2H, ARG2L, NRES0, NRES1, NRES2, NRES3	   ; external ADC subroutines
 ;extrn	data_logger, temp_data
-extrn	new_data_logger
+;extrn	new_data_logger
 ;extrn	_start, PWMOn, Delay1Second, PWMOff 
     
 psect	udata_acs   ; reserve data space in access ram
