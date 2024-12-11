@@ -8,6 +8,8 @@ extrn	ADC_Setup, ADC_Read, multiplication, mul24and8, RES3, RES0, RES1, RES2,  A
 ;extrn	data_logger, temp_data
 ;extrn	new_data_logger
 ;extrn	_start, PWMOn, Delay1Second, PWMOff 
+extrn	init_LCD, send_data, send_command, CS1, CS2
+    
     
 psect	udata_acs   ; reserve data space in access ram
 counter:    ds 1    ; reserve one byte for a counter variable
@@ -19,6 +21,9 @@ dot:	    ds 1
 R1:	    ds 1
 R2:	    ds 1
 R3:	    ds 1
+count:	    ds 1   
+    
+    
 psect	udata_bank4 ; reserve data anywhere in RAM (here at 0x400)
 myArray:    ds 0x80 ; reserve 128 bytes for message data
 
@@ -58,9 +63,17 @@ setup:	bcf	CFGS	; point to Flash program memory
 	call	ADC_Setup
 	clrf	TRISD, A	; set portD as digital output for seconds display
 	clrf	TRISE, A
-	;bcf	TRISB, 6
-	clrf	TRISH            ; Configure PORTB as output
-        clrf	PORTH           ; Clear PORTB (all pins LOW)
+	;initialise GLCD
+	
+	call	init_LCD
+	call	clear_display
+	bcf	PORTB, CS1
+	nop
+	bsf	PORTB, CS2;ft half active
+	nop
+	
+	clrf	TRISH            ; Configure PORTH as output for buzzer
+        clrf	PORTH           ; Clear PORTH (all pins LOW)
 	goto	loop
 	
 	; ******* Main programme ****************************************
@@ -84,7 +97,10 @@ loop_clock_read:
 	call	RTCC_Get_Year
 	call	bcd_to_ascii ;convert BCD to ASCII
 	movff	high_nibble_ASCII, myArray + 1
+	movf	high_nibble_ASCII, W
+	call	compare_number
 	movff	low_nibble_ASCII, myArray + 2
+	movf	high_nibble_ASCII, W
 	
 	;dash
 	movlw	0x2D
@@ -219,6 +235,72 @@ DELAY_INNER:
 	GOTO DELAY_OUTER3     ; Repeat outermost loop (2 cycles)
 	RETURN                ; Return to main program
 
+clear_display:
+	; Clear pages and reset cursor for each page (0xB8 to 0xBF)
+	movlw	0xB8 ; Set to page 0 (x-address)
+	call	send_command
+	movlw	0x40 ; Set to strip 0 in page (y-address)
+	call	send_command
+	call	clear_page
+
+	movlw	0xB9 ; Set to page 1 (x-address)
+	call	send_command
+	movlw	0x40 ; Set to strip 0 in page (y-address)
+	call	send_command
+	call	clear_page
+
+	movlw	0xBA ; Set to page 2 (x-address)
+	call	send_command
+	movlw	0x40 ; Set to strip 0 in page (y-address)
+	call	send_command
+	call	clear_page
+
+	movlw	0xBB ; Set to page 3 (x-address)
+	call	send_command
+	movlw	0x40 ; Set to strip 0 in page (y-address)
+	call	send_command
+	call	clear_page
+
+	movlw	0xBC ; Set to page 4 (x-address)
+	call	send_command
+	movlw	0x40 ; Set to strip 0 in page (y-address)
+	call	send_command
+	call	clear_page
+
+	movlw	0xBD ; Set to page 5 (x-address)
+	call	send_command
+	movlw	0x40 ; Set to strip 0 in page (y-address)
+	call	send_command
+	call	clear_page
+
+	movlw	0xBE ; Set to page 6 (x-address)
+	call	send_command
+	movlw	0x40 ; Set to strip 0 in page (y-address)
+	call	send_command
+	call	clear_page
+
+	movlw	0xBF ; Set to page 7 (x-address)
+	call	send_command
+	movlw	0x40 ; Set to strip 0 in page (y-address)
+	call	send_command
+	call	clear_page
 	
+	return
+
+; Routine to clear a page (sets column address to 0x40 and sends 0x00 to clear)
+clear_page:
+	movlw	0x40 ; Set column address to the beginning of the page
+	movwf	count
+clear_loop:
+	call	clear
+	decfsz	count
+	bra	clear_loop
+	return
+
+; Routine to send a clear command (send 0x00 data to clear the display)
+clear:
+	movlw	0x00
+	call	send_data
+	return	
 
     end	rst 
