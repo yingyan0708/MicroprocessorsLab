@@ -7,7 +7,7 @@ extrn	low_nibble_ASCII, high_nibble_ASCII, bcd_to_ascii
 extrn	ADC_Setup, ADC_Read, multiplication, mul24and8, RES3, RES0, RES1, RES2,  ARG2H, ARG2L, NRES0, NRES1, NRES2, NRES3	   ; external ADC subroutines
 ;extrn	data_logger, temp_data
 extrn	new_data_logger
-extrn	_start, PWMOn, Delay1Second, PWMOff 
+;extrn	_start, PWMOn, Delay1Second, PWMOff 
     
 psect	udata_acs   ; reserve data space in access ram
 counter:    ds 1    ; reserve one byte for a counter variable
@@ -16,9 +16,14 @@ colons:	    ds 1
 dash:	    ds 1
 spaces:	    ds 1
 dot:	    ds 1
-    
+R1:	    ds 1
+R2:	    ds 1
+R3:	    ds 1
 psect	udata_bank4 ; reserve data anywhere in RAM (here at 0x400)
 myArray:    ds 0x80 ; reserve 128 bytes for message data
+
+psect	udata_bank5 ; reserve data anywhere in RAM (here at 0x400)
+dataArray:    ds 0x100 ; reserve 128 bytes for message data
 
 psect	data    
 	; ******* myTable, data in programme memory, and its length *****
@@ -53,14 +58,14 @@ setup:	bcf	CFGS	; point to Flash program memory
 	call	ADC_Setup
 	clrf	TRISD, A	; set portD as digital output for seconds display
 	clrf	TRISE, A
-	bcf	TRISB, 6
-	;call	PWM_loop
-	;clrf	TRISA, A
-	;clrf	LATA, A
+	;bcf	TRISB, 6
+	clrf	TRISH            ; Configure PORTB as output
+        clrf	PORTH           ; Clear PORTB (all pins LOW)
 	goto	loop
 	
 	; ******* Main programme ****************************************
-loop:
+loop:	
+	call	ADC_Read
 	goto	loop
 
 loop_clock_read:
@@ -146,8 +151,8 @@ RTCC_ISR: ;RTCC interrupt service routine
 	call	loop_clock_read
 	call	ADC_Read
 	;movff	RES3, temp_data
-	call	new_data_logger
-	nop
+	;call	new_data_logger
+	;nop
 	;movlw	0x418A		; original k value for decimal conversion
 	call    multiplication
 	call	mul24and8
@@ -172,9 +177,32 @@ RTCC_ISR: ;RTCC interrupt service routine
 	movlw	13
 	lfsr	2, myArray
 	call	LCD_Write_Message
+	bsf	LATH, 0           ; Set RB0 HIGH (turn ON buzzer)
+        call	DELAY            ; Wait for a period
+        bcf	LATH, 0           ; Set RB0 LOW (turn OFF buzzer)
 	
 	retfie  f ;return from interrupt
 	
+DELAY:
+	MOVLW 0x3D            ; Outermost loop count (~61 iterations)
+	MOVWF R3              ; Store in R3
+DELAY_OUTER3:
+	MOVLW 0xFF            ; Outer loop count (256 iterations)
+	MOVWF R1              ; Store in R1
+DELAY_OUTER:
+	MOVLW 0xFF            ; Inner loop count (256 iterations)
+	MOVWF R2              ; Store in R2
+DELAY_INNER:
+	NOP                   ; 1 cycle
+	NOP                   ; Add more NOPs for fine-tuning
+	DECFSZ R2, F          ; Decrement R2, skip if 0 (1 or 2 cycles)
+	GOTO DELAY_INNER      ; Repeat inner loop (2 cycles)
+	DECFSZ R1, F          ; Decrement R1, skip if 0 (1 or 2 cycles)
+	GOTO DELAY_OUTER      ; Repeat outer loop (2 cycles)
+	DECFSZ R3, F          ; Decrement R3, skip if 0 (1 or 2 cycles)
+	GOTO DELAY_OUTER3     ; Repeat outermost loop (2 cycles)
+	RETURN                ; Return to main program
+
 	
 
     end	rst 

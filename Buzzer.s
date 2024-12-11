@@ -17,12 +17,10 @@ _start:
     ; Main program loop
 MainLoop:
     call PWMOn  ; Start PWM output
-    call Delay1Second ; Wait for 1 second (using Timer)
+    call Delay1Second ; Wait for 1 second 
     call PWMOff  ; Stop PWM output
     return
-    ;goto MainLoop ; Repeat if necessary
-
-; Initialize the PWM module (CCP1 example)
+  
 InitPWM:
     ; Set the appropriate registers for PWM mode
     bcf     TRISB, 6         ; Set RB6 as output (for buzzer)
@@ -47,11 +45,13 @@ InitTimer:
 
 ; Start PWM signal generation
 PWMOn:
+    bsf	    PORTH, 0, A
     bsf     T2CON, 2         ; Start Timer2 to trigger PWM output
     return
 
 ; Stop PWM signal generation
 PWMOff:
+    bcf	    PORTH, 0, A
     bcf     T2CON, 2         ; Stop Timer2 
     return
 
