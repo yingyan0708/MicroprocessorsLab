@@ -16,10 +16,10 @@
       <itemPath>config.s</itemPath>
       <itemPath>UART.s</itemPath>
       <itemPath>LCD.s</itemPath>
-      <itemPath>GLCD.s</itemPath>
       <itemPath>Read_RTCC.s</itemPath>
-      <itemPath>RTCC.s</itemPath>
       <itemPath>ADC.s</itemPath>
+      <itemPath>RTCC.s</itemPath>
+      <itemPath>GLCD.s</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -1141,7 +1141,7 @@
         <property key="debugoptions.debug-startup" value="Use system settings"/>
         <property key="debugoptions.reset-behaviour" value="Use system settings"/>
         <property key="debugoptions.simultaneous.debug" value="false"/>
-        <property key="debugoptions.useswbreakpoints" value="false"/>
+        <property key="debugoptions.useswbreakpoints" value="true"/>
         <property key="event.recorder.enabled" value="false"/>
         <property key="event.recorder.scvd.files" value=""/>
         <property key="freeze.timers" value="false"/>

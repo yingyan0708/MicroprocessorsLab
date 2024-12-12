@@ -1,11 +1,11 @@
 #include <xc.inc>
 
-global init_LCD, send_data, send_command,CS1,CS2
+global init_LCD, send_data, send_command,CS1,CS2,colon, compare_number
 
 psect	udata_acs
 LCD_cnt_l:	ds 1   ; reserve 1 byte for variable LCD_cnt_l
 LCD_cnt_h:	ds 1   ; reserve 1 byte for variable LCD_cnt_h
-
+bcd_temp:	ds 1
 RS  EQU	2 ;port B is control line
 R   EQU 3 ;RW
 EN  EQU	4
@@ -39,11 +39,7 @@ init_LCD:
 
 	movlw	0xC0 ;start line, start from row 0 (z-address)
 	call	send_command
-	
-	bcf	PORTB, CS2 ;
-	nop
-	bsf	PORTB, CS1;ft half active
-	nop
+
 	
 	return
 
@@ -207,21 +203,21 @@ check_3:
 
 check_4:
         movlw     0x34
-              cpfseq    bcd_temp, A
-              bra       check_5 
-              call      num4
-              return
+        cpfseq    bcd_temp, A
+        bra       check_5 
+        call      num4
+        return
 
 check_5: 
-              movlw     0x35
-              cpfseq    bcd_temp, A
-              bra       check_6 
-              call      num5
-              return
+        movlw     0x35
+        cpfseq    bcd_temp, A
+        bra       check_6 
+        call      num5
+        return
 
 check_6:
-              movlw     0x36
-              cpfseq    bcd_temp, A
+        movlw     0x36
+        cpfseq    bcd_temp, A
               bra       check_7 
               call      num6
               return
@@ -264,6 +260,7 @@ num0:
     call    send_data
     movlw   00000000B
     call    send_data
+    return
 
 num1:
     movlw   00000000B
@@ -282,6 +279,7 @@ num1:
     call    send_data
     movlw   00000000B
     call    send_data
+    return
 
 num2:
     movlw   00000000B
@@ -300,6 +298,7 @@ num2:
     call    send_data
     movlw   00000000B
     call    send_data
+    return
 
 num3:
     movlw   00000000B
@@ -318,6 +317,7 @@ num3:
     call    send_data
     movlw   00000000B
     call    send_data
+    return
 
 num4:
     movlw   00000000B
@@ -336,6 +336,7 @@ num4:
     call    send_data
     movlw   00000000B
     call    send_data
+    return
     
 num5:
     movlw   00000000B
@@ -354,6 +355,7 @@ num5:
     call    send_data
     movlw   00000000B
     call    send_data
+    return
 
 num6:
     movlw   00000000B
@@ -372,6 +374,7 @@ num6:
     call    send_data
     movlw   00000000B
     call    send_data
+    return
 
 num7:
     movlw   00000000B
@@ -390,7 +393,7 @@ num7:
     call    send_data
     movlw   00000000B
     call    send_data
-
+    return
 num8:
     movlw   00000000B
     call    send_data
@@ -408,6 +411,7 @@ num8:
     call    send_data
     movlw   00000000B
     call    send_data
+    return
 
 num9:
     movlw   00000000B
@@ -426,6 +430,7 @@ num9:
     call    send_data
     movlw   00000000B
     call    send_data
+    return
 
 degrees:
     movlw   00000000B
@@ -444,6 +449,7 @@ degrees:
     call    send_data
     movlw   00000000B
     call    send_data
+    return
     
 letterC:
     movlw   00000000B
@@ -462,6 +468,7 @@ letterC:
     call    send_data
     movlw   00000000B
     call    send_data
+    return
 
 letterT:
     movlw   00000000B
@@ -480,6 +487,7 @@ letterT:
     call    send_data
     movlw   00000000B
     call    send_data
+    return
 
 letterE:
     movlw   00000000B
@@ -498,7 +506,7 @@ letterE:
     call    send_data
     movlw   00000000B
     call    send_data
-    
+    return
 letterM:
     movlw   00000000B
     call    send_data
@@ -516,6 +524,7 @@ letterM:
     call    send_data
     movlw   00000000B
     call    send_data
+    return
 
 letterP:
     movlw   00000000B
@@ -534,7 +543,7 @@ letterP:
     call    send_data
     movlw   00000000B
     call    send_data
-    
+    return
 letterR:
     movlw   00000000B
     call    send_data
@@ -552,6 +561,7 @@ letterR:
     call    send_data
     movlw   00000000B
     call    send_data
+    return
 
 letterU:
     movlw   00000000B
@@ -570,6 +580,7 @@ letterU:
     call    send_data
     movlw   00000000B
     call    send_data
+    return
 
 letterA:
     movlw   00000000B
@@ -588,6 +599,7 @@ letterA:
     call    send_data
     movlw   00000000B
     call    send_data
+    return
 
 colon:
     movlw   00000000B
@@ -606,6 +618,7 @@ colon:
     call    send_data
     movlw   00000000B
     call    send_data
+    return
 
 dash:
     movlw   00000000B
@@ -624,6 +637,6 @@ dash:
     call    send_data
     movlw   00000000B
     call    send_data
+    return
 end
-
 
