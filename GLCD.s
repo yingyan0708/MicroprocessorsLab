@@ -1,6 +1,6 @@
 #include <xc.inc>
 
-global init_LCD, send_data, send_command,CS1,CS2,colon, compare_number, bcd_temp
+global init_LCD, send_data, send_command,CS1,CS2,colon, compare_number, bcd_temp, dot,degrees, letterC, spaces_bitmap
 
 psect	udata_acs
 LCD_cnt_l:	ds 1   ; reserve 1 byte for variable LCD_cnt_l
@@ -246,17 +246,17 @@ check_9:
 num0:
     movlw   00000000B
     call    send_data
+    movlw   01111110B
+    call    send_data
+    movlw   10000001B
+    call    send_data
+    movlw   10000001B
+    call    send_data
+    movlw   10000001B
+    call    send_data
+    movlw   01111110B
+    call    send_data
     movlw   00000000B
-    call    send_data
-    movlw   01111110B
-    call    send_data
-    movlw   10000001B
-    call    send_data
-    movlw   10000001B
-    call    send_data
-    movlw   10000001B
-    call    send_data
-    movlw   01111110B
     call    send_data
     movlw   00000000B
     call    send_data
@@ -265,17 +265,17 @@ num0:
 num1:
     movlw   00000000B
     call    send_data
-    movlw   00000001B
+    movlw   00000000B
     call    send_data
-    movlw   00000001B
+    movlw   100000100B
+    call    send_data
+    movlw   10000010B
     call    send_data
     movlw   11111111B
     call    send_data
-    movlw   01000001B
+    movlw   10000000B
     call    send_data
-    movlw   00100001B
-    call    send_data
-    movlw   00000000B
+    movlw   10000000B
     call    send_data
     movlw   00000000B
     call    send_data
@@ -284,17 +284,17 @@ num1:
 num2:
     movlw   00000000B
     call    send_data
-    movlw   00000000B
+    movlw   11000100B
     call    send_data
-    movlw   01100001B
+    movlw   10100010B
     call    send_data
     movlw   10010001B
     call    send_data
     movlw   10001001B
     call    send_data
-    movlw   01000101B
+    movlw   10000110B
     call    send_data
-    movlw   00100011B
+    movlw   00000000B
     call    send_data
     movlw   00000000B
     call    send_data
@@ -303,17 +303,17 @@ num2:
 num3:
     movlw   00000000B
     call    send_data
-    movlw   00000000B
+    movlw   01000010B
     call    send_data
-    movlw   01100110B
+    movlw   10001001B
+    call    send_data
+    movlw   10001001B
     call    send_data
     movlw   10011001B
     call    send_data
-    movlw   10010001B
+    movlw   01100110B
     call    send_data
-    movlw   10010001B
-    call    send_data
-    movlw   01000010B
+    movlw   00000000B
     call    send_data
     movlw   00000000B
     call    send_data
@@ -322,17 +322,17 @@ num3:
 num4:
     movlw   00000000B
     call    send_data
-    movlw   00001000B
-    call    send_data
-    movlw   11111111B
-    call    send_data
-    movlw   01001000B
-    call    send_data
-    movlw   00101000B
+    movlw   00010000B
     call    send_data
     movlw   00011000B
     call    send_data
-    movlw   00001000B
+    movlw   00010100B
+    call    send_data
+    movlw   00010010B
+    call    send_data
+    movlw   11111111B
+    call    send_data
+    movlw   00010000B
     call    send_data
     movlw   00000000B
     call    send_data
@@ -341,17 +341,17 @@ num4:
 num5:
     movlw   00000000B
     call    send_data
+    movlw   01001111B
+    call    send_data
+    movlw   10001001B
+    call    send_data
+    movlw   10001001B
+    call    send_data
+    movlw   10001001B
+    call    send_data
+    movlw   01110001B
+    call    send_data
     movlw   00000000B
-    call    send_data
-    movlw   10001110B
-    call    send_data
-    movlw   10010001B
-    call    send_data
-    movlw   10010001B
-    call    send_data
-    movlw   10010001B
-    call    send_data
-    movlw   11110010B
     call    send_data
     movlw   00000000B
     call    send_data
@@ -360,17 +360,17 @@ num5:
 num6:
     movlw   00000000B
     call    send_data
-    movlw   00001110B
-    call    send_data
-    movlw   10010001B
-    call    send_data
-    movlw   10010001B
-    call    send_data
-    movlw   10010001B
-    call    send_data
-    movlw   01001010B
-    call    send_data
     movlw   00111100B
+    call    send_data
+    movlw   01010010B
+    call    send_data
+    movlw   10001001B
+    call    send_data
+    movlw   10001001B
+    call    send_data
+    movlw   10001001B
+    call    send_data
+    movlw   01110000B
     call    send_data
     movlw   00000000B
     call    send_data
@@ -379,35 +379,36 @@ num6:
 num7:
     movlw   00000000B
     call    send_data
-    movlw   11100000B
-    call    send_data
-    movlw   10010000B
-    call    send_data
-    movlw   10001000B
-    call    send_data
-    movlw   10000100B
-    call    send_data
-    movlw   10000010B
-    call    send_data
     movlw   10000001B
+    call    send_data
+    movlw   01000001B
+    call    send_data
+    movlw   00100001B
+    call    send_data
+    movlw   00010001B
+    call    send_data
+    movlw   00001001B
+    call    send_data
+    movlw   00000111B
     call    send_data
     movlw   00000000B
     call    send_data
     return
+
 num8:
     movlw   00000000B
     call    send_data
-    movlw   01101110B
+    movlw   01110110B
     call    send_data
-    movlw   10010001B
+    movlw   10001001B
     call    send_data
-    movlw   10010001B
+    movlw   10001001B
     call    send_data
-    movlw   10010001B
+    movlw   10001001B
     call    send_data
-    movlw   10010001B
+    movlw   10001001B
     call    send_data
-    movlw   01101110B
+    movlw   01110110B
     call    send_data
     movlw   00000000B
     call    send_data
@@ -416,17 +417,17 @@ num8:
 num9:
     movlw   00000000B
     call    send_data
-    movlw   00000000B
+    movlw   10000110B
+    call    send_data
+    movlw   10001001B
+    call    send_data
+    movlw   10001001B
+    call    send_data
+    movlw   10001001B
     call    send_data
     movlw   01111110B
     call    send_data
-    movlw   10010001B
-    call    send_data
-    movlw   10010001B
-    call    send_data
-    movlw   10010001B
-    call    send_data
-    movlw   01100001B
+    movlw   00000000B
     call    send_data
     movlw   00000000B
     call    send_data
@@ -437,13 +438,13 @@ degrees:
     call    send_data
     movlw   00000000B
     call    send_data
-    movlw   00000000B
+    movlw   00000111B
     call    send_data
-    movlw   11100000B
+    movlw   00000101B
     call    send_data
-    movlw   10100000B
+    movlw   00000101B
     call    send_data
-    movlw   11100000B
+    movlw   00000111B
     call    send_data
     movlw   00000000B
     call    send_data
@@ -454,34 +455,73 @@ degrees:
 letterC:
     movlw   00000000B
     call    send_data
-    movlw   01000010B
-    call    send_data
-    movlw   10000001B
-    call    send_data
-    movlw   10000001B
-    call    send_data
-    movlw   10000001B
-    call    send_data
-    movlw   10000001B
-    call    send_data
     movlw   01111110B
+    call    send_data
+    movlw   10000001B
+    call    send_data
+    movlw   10000001B
+    call    send_data
+    movlw   10000001B
+    call    send_data
+    movlw   10000001B
+    call    send_data
+    movlw   01000010B
     call    send_data
     movlw   00000000B
     call    send_data
     return
 
 letterT:
+    movlw   00000001B
+    call    send_data
+    movlw   00000001B
+    call    send_data
+    movlw   00000001B
+    call    send_data
+    movlw   11111111B
+    call    send_data
+    movlw   00000001B
+    call    send_data
+    movlw   00000001B
+    call    send_data
+    movlw   00000001B
+    call    send_data
     movlw   00000000B
     call    send_data
-    movlw   00010000B
+    return
+
+lettert:
+    movlw   00000000B
     call    send_data
-    movlw   00010000B
+    movlw   00000000B
     call    send_data
-    movlw   01111111B
+    movlw   00001000B
     call    send_data
-    movlw   00010000B
+    movlw   00001000B
     call    send_data
-    movlw   00010000B
+    movlw   11111110B
+    call    send_data
+    movlw   00001000B
+    call    send_data
+    movlw   00001000B
+    call    send_data
+    movlw   00000000B
+    call    send_data
+    return
+
+
+letterE:
+    movlw   00000000B
+    call    send_data
+    movlw   01110000B
+    call    send_data
+    movlw   10101000B
+    call    send_data
+    movlw   10101000B
+    call    send_data
+    movlw   10101000B
+    call    send_data
+    movlw   10110000B
     call    send_data
     movlw   00000000B
     call    send_data
@@ -489,38 +529,21 @@ letterT:
     call    send_data
     return
 
-letterE:
-    movlw   00000000B
-    call    send_data
-    movlw   00000000B
-    call    send_data
-    movlw   00001101B
-    call    send_data
-    movlw   00010101B
-    call    send_data
-    movlw   00010101B
-    call    send_data
-    movlw   00010101B
-    call    send_data
-    movlw   00001110B
-    call    send_data
-    movlw   00000000B
-    call    send_data
-    return
+
 letterM:
     movlw   00000000B
     call    send_data
+    movlw   11111000B
+    call    send_data
+    movlw   00001000B
+    call    send_data
+    movlw   11110000B
+    call    send_data
+    movlw   00001000B
+    call    send_data
+    movlw   11111000B
+    call    send_data
     movlw   00000000B
-    call    send_data
-    movlw   00011111B
-    call    send_data
-    movlw   00010000B
-    call    send_data
-    movlw   00001111B
-    call    send_data
-    movlw   00010000B
-    call    send_data
-    movlw   00011111B
     call    send_data
     movlw   00000000B
     call    send_data
@@ -531,33 +554,34 @@ letterP:
     call    send_data
     movlw   00000000B
     call    send_data
-    movlw   00001000B
+    movlw   11111000B
     call    send_data
-    movlw   00010100B
+    movlw   00101000B
     call    send_data
-    movlw   00010100B
+    movlw   00101000B
     call    send_data
-    movlw   00011111B
+    movlw   00010000B
     call    send_data
     movlw   00000000B
     call    send_data
     movlw   00000000B
     call    send_data
     return
+    
 letterR:
     movlw   00000000B
     call    send_data
+    movlw   11111000B
+    call    send_data
+    movlw   00010000B
+    call    send_data
+    movlw   00001000B
+    call    send_data
+    movlw   00001000B
+    call    send_data
+    movlw   00010000B
+    call    send_data
     movlw   00000000B
-    call    send_data
-    movlw   00001000B
-    call    send_data
-    movlw   00010000B
-    call    send_data
-    movlw   00010000B
-    call    send_data
-    movlw   00001000B
-    call    send_data
-    movlw   00011111B
     call    send_data
     movlw   00000000B
     call    send_data
@@ -566,17 +590,17 @@ letterR:
 letterU:
     movlw   00000000B
     call    send_data
-    movlw   00011111B
+    movlw   00111000B
     call    send_data
-    movlw   00000010B
+    movlw   01000000B
     call    send_data
-    movlw   00000001B
+    movlw   10000000B
     call    send_data
-    movlw   00000001B
+    movlw   10000000B
     call    send_data
-    movlw   00000010B
+    movlw   01000000B
     call    send_data
-    movlw   00011100B
+    movlw   11111000B
     call    send_data
     movlw   00000000B
     call    send_data
@@ -585,17 +609,36 @@ letterU:
 letterA:
     movlw   00000000B
     call    send_data
+    movlw   01001000B
+    call    send_data
+    movlw   10101000B
+    call    send_data
+    movlw   10101000B
+    call    send_data
+    movlw   10101000B
+    call    send_data
+    movlw   01110000B
+    call    send_data
     movlw   00000000B
     call    send_data
-    movlw   00001110B
+    movlw   00000000B
     call    send_data
-    movlw   00010101B
+    return
+
+letterI:
+    movlw   00000000B
     call    send_data
-    movlw   00010101B
+    movlw   00000000B
     call    send_data
-    movlw   00010101B
+    movlw   00000000B
     call    send_data
-    movlw   00010010B
+    movlw   11110110B
+    call    send_data
+    movlw   11110110B
+    call    send_data
+    movlw   00000000B
+    call    send_data
+    movlw   00000000B
     call    send_data
     movlw   00000000B
     call    send_data
@@ -623,17 +666,55 @@ colon:
 dash:
     movlw   00000000B
     call    send_data
-    movlw   00010000B
+    movlw   00001000B
     call    send_data
-    movlw   00010000B
+    movlw   00001000B
     call    send_data
-    movlw   00010000B
+    movlw   00001000B
     call    send_data
-    movlw   00010000B
+    movlw   00001000B
     call    send_data
-    movlw   00010000B
+    movlw   00001000B
     call    send_data
-    movlw   00010000B
+    movlw   00001000B
+    call    send_data
+    movlw   00000000B
+    call    send_data
+    return
+
+dot:
+    movlw   00000000B
+    call    send_data
+    movlw   00000000B
+    call    send_data
+    movlw   00000000B
+    call    send_data
+    movlw   11000000B
+    call    send_data
+    movlw   11000000B
+    call    send_data
+    movlw   00000000B
+    call    send_data
+    movlw   00000000B
+    call    send_data
+    movlw   00000000B
+    call    send_data
+    return
+
+spaces_bitmap:
+    movlw   00000000B
+    call    send_data
+    movlw   00000000B
+    call    send_data
+    movlw   00000000B
+    call    send_data
+    movlw   00000000B
+    call    send_data
+    movlw   00000000B
+    call    send_data
+    movlw   00000000B
+    call    send_data
+    movlw   00000000B
     call    send_data
     movlw   00000000B
     call    send_data

@@ -9,8 +9,8 @@ extrn	ADC_Setup, ADC_Read, multiplication, mul24and8, RES3, RES0, RES1, RES2,  A
 ;extrn	new_data_logger
 ;extrn	_start, PWMOn, Delay1Second, PWMOff 
 extrn	keypad_setup, keypad_read, alarm_mask, buzzer_threshold_L, buzzer_threshold_H
-extrn	init_LCD, send_data, send_command, CS1, CS2, colon, compare_number
-global	high_hour
+extrn	init_LCD, send_data, send_command, CS1, CS2, colon, compare_number, dot, degrees, letterC, spaces_bitmap
+global	high_hour, page_counter, page_pointer
     
 psect	udata_acs   ; reserve data space in access ram
 counter:    ds 1    ; reserve one byte for a counter variable
@@ -18,7 +18,7 @@ delay_count:ds 1    ; reserve one byte for counter in the delay routine
 colons:	    ds 1
 dash:	    ds 1
 spaces:	    ds 1
-dot:	    ds 1
+dot_ASCII:	    ds 1
 R1:	    ds 1
 R2:	    ds 1
 R3:	    ds 1
@@ -34,6 +34,9 @@ high_minute:	ds 1
 low_minute:	ds 1
 high_second:	ds 1
 low_second:	ds 1
+temp_reading_1:	    ds 1
+temp_reading_2:	    ds 1
+temp_reading_3:	    ds 1
     
     
 psect	udata_bank4 ; reserve data anywhere in RAM (here at 0x400)
@@ -90,34 +93,36 @@ setup:	bcf	CFGS	; point to Flash program memory
 	call	clear_display
 	movlw	0xB8
 	movwf	page_pointer, A
-	
+	call	keypad_read
 
 	clrf	TRISH            ; Configure PORTH as output for buzzer
         clrf	PORTH           ; Clear PORTH (all pins LOW)
 	goto	loop
 	
 	; ******* Main programme ****************************************
-loop:	
+loop:		
 	;call	init_LCD
 	call	ADC_Read
-	;call	keypad_read
-	movlw	0x00         ; Load high byte of 0x12C (0x012C)
-	;movwf	buzzer_
-	;movf	buzzer_threshold_H, W, A
+	;movlw	0x00         ; Load high byte of 0x12C (0x012C)
+	movf	buzzer_threshold_H, W, A
         cpfslt	ADRESH       ; Compare ADRESH with 0x01, skip if ADRESH < 0x01
 	call	check_ADRESL
-	;movlw	0x00
-	;cpfseq	high_hour, A
-	;call	GLCD_print_high_hour
 	goto	loop
+	
+check_ADRESL:
+	;movlw	0xFA
+	movf	buzzer_threshold_L, W, A
+	cpfslt	ADRESL  ; Compare ADRESL with 0x2C, skip if ADRESH < 0x2C
+	call	Buzzer
+	return
 
 GLCD_print_high_hour:
-	bcf	PORTB, CS2 ;
+	bcf	PORTB, CS1 ;
 	nop
-	bsf	PORTB, CS1;set CS2 active
+	bsf	PORTB, CS2;set CS1 active
 	nop
-	call	page_setup
-	movf    page_counter, W, A ; 
+
+	movf    page_pointer, W, A ; 
 	call	send_command
 
 	movlw	0x40 ; set to strip 0 in page (y-address)
@@ -171,17 +176,46 @@ not_last_page:; Increment the counter
 	incf    page_pointer, F
 	return
 	
+GLCD_print_temp_value:
+	bcf	PORTB, CS2 ;
+	nop
+	bsf	PORTB, CS1;set CS2 active
+	nop
+	movf    page_pointer, W, A ; 
+	call	send_command
 
+	movlw	0x40 ; set to strip 0 in page (y-address)
+	call	send_command
+	call	spaces_bitmap
+	call	spaces_bitmap
+	movf	temp_reading_1, W, A
+	call	compare_number
+	goto	GLCD_print_temp_value_2
+GLCD_print_temp_value_2:
+	movf	temp_reading_2, W, A
+	call	compare_number
+	goto	GLCD_print_dot
+GLCD_print_dot:
+	call	dot
+	goto	GLCD_print_temp_value_3
+GLCD_print_temp_value_3:
+	movf	temp_reading_3, W, A
+	call	compare_number
+	goto	GLCD_print_degree
+GLCD_print_degree:
+	call	degrees
+	goto	GLCD_print_C
+GLCD_print_C:
+	call	letterC
+	return
+
+    
+    
     
 	
     
 
-check_ADRESL:
-	movlw	0xFA
-	;movf	buzzer_threshold_L, W, A
-	cpfslt	ADRESL  ; Compare ADRESL with 0x2C, skip if ADRESH < 0x2C
-	call	Buzzer
-	return
+
 	
 	
 loop_clock_read:
@@ -279,7 +313,9 @@ RTCC_ISR: ;RTCC interrupt service routine
 	incf	LATJ, F, A	; increment PORTD
 	call	loop_clock_read
 	call	ADC_Read
+	call	page_setup
 	call	GLCD_print_high_hour
+	call	GLCD_print_temp_value
 	call    multiplication
 	call	mul24and8
 	;movlw	0x0043		; scaling factor for temperature conversion
@@ -288,18 +324,21 @@ RTCC_ISR: ;RTCC interrupt service routine
 	movlw	0x30		; ASCII code conversion
 	addwf	RES3, F, A
 	movff	RES3, myArray + 9
+	movff	RES3, temp_reading_1
 	
 	call	mul24and8
 	movlw	0x30
 	addwf	RES3, F, A
 	movff	RES3, myArray + 10
+	movff	RES3, temp_reading_2
 	call	mul24and8
 	movlw	0x2E	;ascii code for .
-	movwf	dot, A
-	movff	dot, myArray + 11
+	movwf	dot_ASCII, A
+	movff	dot_ASCII, myArray + 11
 	movlw	0x30
 	addwf	RES3, F, A
 	movff	RES3, myArray + 12
+	movff	RES3, temp_reading_3
 	
 	;movlw	13
 	;lfsr	2, myArray

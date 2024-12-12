@@ -177,7 +177,7 @@ RTCC_set_year:
 RTCC_Alarm_Setup:
     banksel ALRMRPT
     banksel ALRMCFG
-    movlw   11001000B ;enable alarm,enable chime to allow roll over from 00h to FFh, mask alarm to interrupt every 10 minutes 0100
+    movlw   11000000B ;enable alarm,enable chime to allow roll over from 00h to FFh, mask alarm to interrupt every 10 minutes 0100
     ;movlw   alarm_mask
     movwf   ALRMCFG, B
     movlw   0x00    
