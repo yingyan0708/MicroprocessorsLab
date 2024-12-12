@@ -50,7 +50,7 @@ psect	data
 myTable:
 	db	'H','e','l','l','o',' ','W','o','r','l','d','!',0x0a
 					; message, plus carriage return
-	myTable_l   EQU	13	; length of data
+	myTable_l   EQU	26	; length of data
 	align	2
     
 psect	code, abs	
@@ -219,34 +219,45 @@ GLCD_print_C:
 	
 	
 loop_clock_read:
+	movlw	0x20
+	movwf	spaces, A
 	;call	first_line
 	;read year
 	call	RTCC_Get_Year
 	call	bcd_to_ascii ;convert BCD to ASCII
 	movff	high_nibble_ASCII, myArray + 1
-	movf	high_nibble_ASCII, W
-	;call	compare_number
 	movff	low_nibble_ASCII, myArray + 2
-	movf	high_nibble_ASCII, W
+	movff	spaces, POSTINC0
+	movff	high_nibble_ASCII, POSTINC0
+	movff	low_nibble_ASCII, POSTINC0
+
+	
 	
 	;dash
 	movlw	0x2D
 	movwf	dash, A
 	movff	dash, myArray + 3
+	movff	dash, POSTINC0
 	
 	;read month
 	call	RTCC_Get_Month
 	call	bcd_to_ascii ;convert BCD to ASCII
 	movff	high_nibble_ASCII, myArray + 4
 	movff	low_nibble_ASCII, myArray + 5
+	movff	high_nibble_ASCII, POSTINC0
+	movff	low_nibble_ASCII, POSTINC0
 	
 	movff	dash, myArray + 6
+	movff	dash, POSTINC0
 	
 	;read day
 	call	RTCC_Get_Day
 	call	bcd_to_ascii ;convert BCD to ASCII
 	movff	high_nibble_ASCII, myArray + 7
 	movff	low_nibble_ASCII, myArray + 8
+	movff	high_nibble_ASCII, POSTINC0
+	movff	low_nibble_ASCII, POSTINC0
+	movff	spaces, POSTINC0
 	
 	;movlw	9
 	;lfsr	2, myArray
@@ -260,6 +271,8 @@ loop_clock_read:
 	movff	low_nibble_ASCII, myArray + 1
 	movff	high_nibble_ASCII, high_hour
 	movff	low_nibble_ASCII, low_hour
+	movff	high_nibble_ASCII, POSTINC0
+	movff	low_nibble_ASCII, POSTINC0
 	
 	;lfsr	0, dataArray
 	;movff	high_nibble_ASCII, POSTINC0
@@ -268,6 +281,7 @@ loop_clock_read:
 	movlw	0x3A	;ascii code for :
 	movwf	colons, A
 	movff	colons, myArray + 2
+	movff	colons, POSTINC0
 	
 	call	RTCC_Get_Minutes    ; returns seconds value in W
 	call	bcd_to_ascii ;convert BCD to ASCII
@@ -275,8 +289,11 @@ loop_clock_read:
 	movff	low_nibble_ASCII, myArray + 4
 	movff	high_nibble_ASCII, high_minute
 	movff	low_nibble_ASCII, low_minute
+	movff	high_nibble_ASCII, POSTINC0
+	movff	low_nibble_ASCII, POSTINC0
 
 	movff	colons, myArray + 5
+	movff	colons, POSTINC0
 	
 	call	RTCC_Get_Seconds
 	call	bcd_to_ascii
@@ -284,10 +301,12 @@ loop_clock_read:
 	movff	low_nibble_ASCII, myArray + 7
 	movff	high_nibble_ASCII, high_second
 	movff	low_nibble_ASCII, low_second
+	movff	high_nibble_ASCII, POSTINC0
+	movff	low_nibble_ASCII, POSTINC0
 	
-	movlw	0x20
-	movwf	spaces, A
+
 	movff	spaces, myArray + 8
+	movff	spaces, POSTINC0
 	;just to print alarm value
 	;call	RTCC_alarm_get_minutes
 	;call	bcd_to_ascii
@@ -304,6 +323,7 @@ delay:	decfsz	delay_count, A	; decrement until zero
 	return
 
 RTCC_ISR: ;RTCC interrupt service routine
+	lfsr	0, dataArray
 	banksel	PIR3
 	btfss	PIR3, 0, A ;bit test file, skip if alarm interrupt flag is set
 	retfie	f ;return from interrupt
@@ -325,20 +345,34 @@ RTCC_ISR: ;RTCC interrupt service routine
 	addwf	RES3, F, A
 	movff	RES3, myArray + 9
 	movff	RES3, temp_reading_1
+	movff	RES3, POSTINC0
 	
 	call	mul24and8
 	movlw	0x30
 	addwf	RES3, F, A
 	movff	RES3, myArray + 10
 	movff	RES3, temp_reading_2
+	movff	RES3, POSTINC0
+	
 	call	mul24and8
 	movlw	0x2E	;ascii code for .
 	movwf	dot_ASCII, A
 	movff	dot_ASCII, myArray + 11
+	movff	dot_ASCII, POSTINC0
 	movlw	0x30
 	addwf	RES3, F, A
 	movff	RES3, myArray + 12
 	movff	RES3, temp_reading_3
+	movff	RES3, POSTINC0
+	
+	movlw   0x0D              ; ASCII for Carriage Return (CR)
+	movwf   POSTINC0          ; Add CR to myArray
+	movlw   0x0A              ; ASCII for Line Feed (LF)
+	movwf   POSTINC0          ; Add LF to myArray
+	
+	movlw	myTable_l
+	lfsr	2, dataArray
+	call	UART_Transmit_Message
 	
 	;movlw	13
 	;lfsr	2, myArray
