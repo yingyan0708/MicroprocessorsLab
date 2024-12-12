@@ -1,7 +1,8 @@
 #include <xc.inc>
     
 global  RTCC_Setup, RTCC_Get_Seconds, RTCC_Get_Minutes, RTCC_Get_Hours, RTCC_Get_Weekday, RTCC_Get_Day, RTCC_Get_Month, RTCC_Get_Year, RTCC_alarm_get_minutes
-
+;extrn	alarm_mask
+    
 psect	udata_acs   ; reserve data space in access ram
 RTCC_seconds: ds    1	    ; reserve 1 byte for seconds
 RTCC_minutes: ds    1	    ; reserve 1 byte for minutes
@@ -177,6 +178,7 @@ RTCC_Alarm_Setup:
     banksel ALRMRPT
     banksel ALRMCFG
     movlw   11001000B ;enable alarm,enable chime to allow roll over from 00h to FFh, mask alarm to interrupt every 10 minutes 0100
+    ;movlw   alarm_mask
     movwf   ALRMCFG, B
     movlw   0x00    
     movwf   ALRMRPT, B ;alarm will not repeat

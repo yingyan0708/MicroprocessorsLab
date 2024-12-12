@@ -8,8 +8,9 @@ extrn	ADC_Setup, ADC_Read, multiplication, mul24and8, RES3, RES0, RES1, RES2,  A
 ;extrn	data_logger, temp_data
 ;extrn	new_data_logger
 ;extrn	_start, PWMOn, Delay1Second, PWMOff 
-extrn	init_LCD, send_data, send_command, CS1, CS2
-    
+extrn	keypad_setup, keypad_read, alarm_mask, buzzer_threshold_L, buzzer_threshold_H
+extrn	init_LCD, send_data, send_command, CS1, CS2, colon, compare_number
+global	high_hour
     
 psect	udata_acs   ; reserve data space in access ram
 counter:    ds 1    ; reserve one byte for a counter variable
@@ -22,6 +23,17 @@ R1:	    ds 1
 R2:	    ds 1
 R3:	    ds 1
 count:	    ds 1   
+page_counter:	ds  1
+page_pointer:	ds 1
+page_counter_CS2:   ds	1
+subtract:	ds 1
+subtract_CS2:	ds 1
+high_hour:	ds 1
+low_hour:	ds 1
+high_minute:	ds 1
+low_minute:	ds 1
+high_second:	ds 1
+low_second:	ds 1
     
     
 psect	udata_bank4 ; reserve data anywhere in RAM (here at 0x400)
@@ -58,47 +70,128 @@ setup:	bcf	CFGS	; point to Flash program memory
 	bcf	PIR3, 0, A  ;clear RTCC interrupt flag
 	;
 	call	UART_Setup	; setup UART
-	call	LCD_Setup	; setup UART
+	;call	LCD_Setup	; setup UART
 	call	RTCC_Setup	; setup RTCC
 	call	ADC_Setup
-	clrf	TRISD, A	; set portD as digital output for seconds display
-	clrf	TRISE, A
+	call	keypad_setup
+	;clrf	TRISD, A	; set portD as digital output for seconds display
+	clrf	TRISJ, A
 	;initialise GLCD
-	
 	call	init_LCD
+	bcf	PORTB, CS2 ;
+	nop
+	bsf	PORTB, CS1;set CS2 active
+	nop
 	call	clear_display
 	bcf	PORTB, CS1
 	nop
-	bsf	PORTB, CS2;ft half active
+	bsf	PORTB, CS2;set CS1 active
 	nop
+	call	clear_display
+	movlw	0xB8
+	movwf	page_pointer, A
 	
+
 	clrf	TRISH            ; Configure PORTH as output for buzzer
         clrf	PORTH           ; Clear PORTH (all pins LOW)
 	goto	loop
 	
 	; ******* Main programme ****************************************
 loop:	
+	;call	init_LCD
 	call	ADC_Read
-	movlw	0x01          ; Load high byte of 0x12C (0x012C)
+	;call	keypad_read
+	movlw	0x00         ; Load high byte of 0x12C (0x012C)
+	;movwf	buzzer_
+	;movf	buzzer_threshold_H, W, A
         cpfslt	ADRESH       ; Compare ADRESH with 0x01, skip if ADRESH < 0x01
 	call	check_ADRESL
+	;movlw	0x00
+	;cpfseq	high_hour, A
+	;call	GLCD_print_high_hour
 	goto	loop
 
+GLCD_print_high_hour:
+	bcf	PORTB, CS2 ;
+	nop
+	bsf	PORTB, CS1;set CS2 active
+	nop
+	call	page_setup
+	movf    page_counter, W, A ; 
+	call	send_command
+
+	movlw	0x40 ; set to strip 0 in page (y-address)
+	call	send_command
+	movf	high_hour, W, A
+	call	compare_number
+	goto	GLCD_print_low_hour
+	
+GLCD_print_low_hour:
+	movf	low_hour, W, A
+	call	compare_number
+	goto	GLCD_print_colon_1
+	
+GLCD_print_colon_1:
+	call	colon
+	goto	GLCD_print_high_minute
+
+GLCD_print_high_minute:
+	movf	high_minute, W, A
+	call	compare_number
+	goto	GLCD_print_low_minute
+	
+GLCD_print_low_minute:
+	movf	low_minute, W, A
+	call	compare_number
+	goto	GLCD_print_colon_2
+
+GLCD_print_colon_2:
+	call	colon
+	goto	GLCD_print_high_second
+	
+GLCD_print_high_second:
+	movf	high_second, W, A
+	call	compare_number
+	goto	GLCD_print_low_second
+
+GLCD_print_low_second:
+	movf	low_second, W, A
+	call	compare_number
+	return
+
+page_setup:
+	movlw	0xBF
+	cpfseq	page_pointer,A
+	bra     not_last_page
+	movlw	0xB8
+	movwf	page_pointer, A
+	return
+	    
+not_last_page:; Increment the counter
+	incf    page_pointer, F
+	return
+	
+
+    
+	
+    
+
 check_ADRESL:
-	movlw	0x2C
+	movlw	0xFA
+	;movf	buzzer_threshold_L, W, A
 	cpfslt	ADRESL  ; Compare ADRESL with 0x2C, skip if ADRESH < 0x2C
 	call	Buzzer
 	return
 	
 	
 loop_clock_read:
-	call	first_line
+	;call	first_line
 	;read year
 	call	RTCC_Get_Year
 	call	bcd_to_ascii ;convert BCD to ASCII
 	movff	high_nibble_ASCII, myArray + 1
 	movf	high_nibble_ASCII, W
-	call	compare_number
+	;call	compare_number
 	movff	low_nibble_ASCII, myArray + 2
 	movf	high_nibble_ASCII, W
 	
@@ -121,16 +214,18 @@ loop_clock_read:
 	movff	high_nibble_ASCII, myArray + 7
 	movff	low_nibble_ASCII, myArray + 8
 	
-	movlw	9
-	lfsr	2, myArray
-	call	LCD_Write_Message
+	;movlw	9
+	;lfsr	2, myArray
+	;call	LCD_Write_Message
 	
 	;read hour
-	call	second_line
+	;call	second_line
 	call	RTCC_Get_Hours    ; returns seconds value in W
 	call	bcd_to_ascii ;convert BCD to ASCII
 	movff	high_nibble_ASCII, myArray 
 	movff	low_nibble_ASCII, myArray + 1
+	movff	high_nibble_ASCII, high_hour
+	movff	low_nibble_ASCII, low_hour
 	
 	;lfsr	0, dataArray
 	;movff	high_nibble_ASCII, POSTINC0
@@ -144,6 +239,8 @@ loop_clock_read:
 	call	bcd_to_ascii ;convert BCD to ASCII
 	movff	high_nibble_ASCII, myArray + 3
 	movff	low_nibble_ASCII, myArray + 4
+	movff	high_nibble_ASCII, high_minute
+	movff	low_nibble_ASCII, low_minute
 
 	movff	colons, myArray + 5
 	
@@ -151,6 +248,8 @@ loop_clock_read:
 	call	bcd_to_ascii
 	movff	high_nibble_ASCII, myArray + 6
 	movff	low_nibble_ASCII, myArray + 7
+	movff	high_nibble_ASCII, high_second
+	movff	low_nibble_ASCII, low_second
 	
 	movlw	0x20
 	movwf	spaces, A
@@ -177,13 +276,10 @@ RTCC_ISR: ;RTCC interrupt service routine
 	;
 	bcf	PIR3, 0, A ;clear alarm interrupt flag
 	;perform action
-	incf	LATD, F, A	; increment PORTD
+	incf	LATJ, F, A	; increment PORTD
 	call	loop_clock_read
 	call	ADC_Read
-	;movff	RES3, temp_data
-	;call	new_data_logger
-	;nop
-	;movlw	0x418A		; original k value for decimal conversion
+	call	GLCD_print_high_hour
 	call    multiplication
 	call	mul24and8
 	;movlw	0x0043		; scaling factor for temperature conversion
@@ -192,6 +288,7 @@ RTCC_ISR: ;RTCC interrupt service routine
 	movlw	0x30		; ASCII code conversion
 	addwf	RES3, F, A
 	movff	RES3, myArray + 9
+	
 	call	mul24and8
 	movlw	0x30
 	addwf	RES3, F, A
@@ -204,9 +301,9 @@ RTCC_ISR: ;RTCC interrupt service routine
 	addwf	RES3, F, A
 	movff	RES3, myArray + 12
 	
-	movlw	13
-	lfsr	2, myArray
-	call	LCD_Write_Message
+	;movlw	13
+	;lfsr	2, myArray
+	;call	LCD_Write_Message
 	
 	retfie  f ;return from interrupt
 	
@@ -302,5 +399,7 @@ clear:
 	movlw	0x00
 	call	send_data
 	return	
+
+	
 
     end	rst 

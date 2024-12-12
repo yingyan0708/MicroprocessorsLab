@@ -12,14 +12,15 @@
     <logicalFolder name="SourceFiles"
                    displayName="Source Files"
                    projectFiles="true">
-      <itemPath>main.s</itemPath>
       <itemPath>config.s</itemPath>
       <itemPath>UART.s</itemPath>
       <itemPath>LCD.s</itemPath>
-      <itemPath>Read_RTCC.s</itemPath>
-      <itemPath>ADC.s</itemPath>
-      <itemPath>RTCC.s</itemPath>
       <itemPath>GLCD.s</itemPath>
+      <itemPath>ADC.s</itemPath>
+      <itemPath>Read_RTCC.s</itemPath>
+      <itemPath>RTCC.s</itemPath>
+      <itemPath>main.s</itemPath>
+      <itemPath>keypad_rtcc.s</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
