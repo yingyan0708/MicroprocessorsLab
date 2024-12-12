@@ -16,8 +16,8 @@
       <itemPath>config.s</itemPath>
       <itemPath>UART.s</itemPath>
       <itemPath>LCD.s</itemPath>
+      <itemPath>GLCD.s</itemPath>
       <itemPath>GLCD_code.s</itemPath>
-      <itemPath>ACD.s</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
