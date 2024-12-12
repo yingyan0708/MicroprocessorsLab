@@ -12,9 +12,9 @@
     <logicalFolder name="SourceFiles"
                    displayName="Source Files"
                    projectFiles="true">
-      <itemPath>main.s</itemPath>
       <itemPath>config.s</itemPath>
       <itemPath>UART.s</itemPath>
+      <itemPath>main.s</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -580,6 +580,7 @@
                   value="${memories.instruction.ram.ranges}"/>
         <property key="memories.programmemory" value="true"/>
         <property key="memories.programmemory.ranges" value="0-1ffff"/>
+        <property key="memories.rww" value="true"/>
         <property key="oscillator.auxfrequency" value="120"/>
         <property key="oscillator.auxfrequencyunit" value="Mega"/>
         <property key="oscillator.frequency" value="1"/>
@@ -912,6 +913,8 @@
                   value="report"/>
         <property key="warningmessagebreakoptions.W0247_ADC_CONVERSION_BAD_RESSEL"
                   value="report"/>
+        <property key="warningmessagebreakoptions.W0248_ADC_WR_BEFORE_KEY_SEQ"
+                  value="report"/>
         <property key="warningmessagebreakoptions.W0300_NVM_WR_BEFORE_KEY_SEQ"
                   value="report"/>
         <property key="warningmessagebreakoptions.W0400_PWM_PWM_FASTER_THAN_FOSC"
@@ -1152,8 +1155,6 @@
         <property key="memories.programmemory" value="true"/>
         <property key="memories.programmemory.ranges" value="0-1ffff"/>
         <property key="poweroptions.powerenable" value="false"/>
-        <property key="programmerToGoFilePath"
-                  value="C:/Users/yyc22/OneDrive - Imperial College London/MicroprocessorsLab/debug/default/default_ptg"/>
         <property key="programmerToGoImageName" value="default_ptg"/>
         <property key="programoptions.donoteraseauxmem" value="false"/>
         <property key="programoptions.eraseb4program" value="true"/>
