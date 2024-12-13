@@ -1,6 +1,6 @@
 #include <xc.inc>
 
-global init_LCD, send_data, send_command,CS1,CS2,colon, compare_number, bcd_temp, dot,degrees, letterC, spaces_bitmap
+global init_LCD, send_data, send_command,CS1,CS2,colon, compare_number, bcd_temp, dot,degrees, letterC, spaces_bitmap, letterT, letterC, lettert, letterE,letterM,letterP,letterR,letterU,letterA,letterI
 
 psect	udata_acs
 LCD_cnt_l:	ds 1   ; reserve 1 byte for variable LCD_cnt_l

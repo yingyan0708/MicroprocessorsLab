@@ -1,7 +1,7 @@
 #include <xc.inc>
     
 global  RTCC_Setup, RTCC_Get_Seconds, RTCC_Get_Minutes, RTCC_Get_Hours, RTCC_Get_Weekday, RTCC_Get_Day, RTCC_Get_Month, RTCC_Get_Year, RTCC_alarm_get_minutes
-;extrn	alarm_mask
+extrn	alarm_mask
     
 psect	udata_acs   ; reserve data space in access ram
 RTCC_seconds: ds    1	    ; reserve 1 byte for seconds
@@ -20,6 +20,8 @@ RTCC_Setup:
     bsf	    RTSECSEL1	; RTSECSELx bits determine output on RTCC pin
     bcf	    RTSECSEL0	; 10 outputs the source clock, 01 outputs second count
     bsf	    RTCCFG, 2, B ;enable RTCOE
+    call    RTCC_set_minutes
+    call    RTCC_set_hours
     call    RTCC_Alarm_Setup
     bcf	    RTCCFG, 5, B ;disable RTCWREN
     bsf	    RTSECSEL1	; RTSECSELx bits determine output on RTCC pin
@@ -119,7 +121,7 @@ RTCC_set_minutes:
     bsf	    RTCCFG, 5, B ;enable RTCWREN
     bcf	    RTCPTR1	; Clear RTCPTR1 and RTCPTR0 for seconds output
     bcf	    RTCPTR0
-    movlw   00100101B
+    movlw   00010100B
     movwf   RTCVALH, B   ; Read minutes from RTCVALH 
     return
     
@@ -128,7 +130,7 @@ RTCC_set_hours:
     bsf	    RTCCFG, 5, B ;enable RTCWREN
     bcf	    RTCPTR1	; Clear RTCPTR1 and RTCPTR0 for seconds output
     bsf	    RTCPTR0
-    movlw   00010000B
+    movlw   00010011B
     movwf   RTCVALL, B   ; set hours from RTCVALH 
     return
     
@@ -137,7 +139,7 @@ RTCC_set_day:
     bsf	    RTCCFG, 5, B ;enable RTCWREN
     bsf	    RTCPTR1	; Clear RTCPTR1 and RTCPTR0 for seconds output
     bcf	    RTCPTR0
-    movlw   00010000B
+    movlw   00010011B
     movwf   RTCVALL, B   ; Read minutes from RTCVALH 
     return
     
@@ -150,7 +152,7 @@ RTCC_set_weekday:
     bsf	    RTCCFG, 5, B ;enable RTCWREN
     bcf	    RTCPTR1	; Clear RTCPTR1 and RTCPTR0 for seconds output
     bsf	    RTCPTR0
-    movlw   00000010B
+    movlw   00000101B
     movwf   RTCVALH, B   ; Read minutes from RTCVALH 
     return
     
@@ -177,8 +179,8 @@ RTCC_set_year:
 RTCC_Alarm_Setup:
     banksel ALRMRPT
     banksel ALRMCFG
-    movlw   11000000B ;enable alarm,enable chime to allow roll over from 00h to FFh, mask alarm to interrupt every 10 minutes 0100
-    ;movlw   alarm_mask
+    ;movlw   11000100B ;enable alarm,enable chime to allow roll over from 00h to FFh, mask alarm to interrupt every 10 minutes 0100
+    movf    alarm_mask, W, A
     movwf   ALRMCFG, B
     movlw   0x00    
     movwf   ALRMRPT, B ;alarm will not repeat
@@ -219,7 +221,7 @@ RTCC_alarm_set_minutes:
     bcf	    RTCCFG, 5, B ;enable RTCWREN
     bcf	    ALRMPTR1 ;
     bcf	    ALRMPTR0 ;
-    movlw   00110010B
+    movlw   00100010B
     movwf   ALRMVALH, B   ; set minutes for ALRMVALH
     return
 
@@ -238,7 +240,7 @@ RTCC_alarm_set_hours:
     bsf	    RTCCFG, 5, B ;enable RTCWREN
     bcf	    ALRMPTR1 ;
     bsf	    ALRMPTR0 ;
-    movlw   00010010B 
+    movlw   00010000B 
     movwf   ALRMVALL, B   ; set hours for ALRMVALL
     return
     
@@ -248,7 +250,7 @@ RTCC_alarm_set_weekday:
     bsf	    RTCCFG, 5, B ;enable RTCWREN
     bcf	    ALRMPTR1 ;
     bsf	    ALRMPTR0 ;
-    movlw   00000001B 
+    movlw   00001001B 
     movwf   ALRMVALH, B   ; set weekday for ALRMVALH
     return
     
@@ -258,7 +260,7 @@ RTCC_alarm_set_day:
     bsf	    RTCCFG, 5, B ;enable RTCWREN
     bsf	    ALRMPTR1 ;
     bcf	    ALRMPTR0 ;
-    movlw   00001001B ; set day to 6th
+    movlw   00010011B ; set day to 6th
     movwf   ALRMVALL, B   ; set day for ALRMVALL
     return
     

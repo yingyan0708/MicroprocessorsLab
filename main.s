@@ -9,8 +9,8 @@ extrn	ADC_Setup, ADC_Read, multiplication, mul24and8, RES3, RES0, RES1, RES2,  A
 ;extrn	new_data_logger
 ;extrn	_start, PWMOn, Delay1Second, PWMOff 
 extrn	keypad_setup, keypad_read, alarm_mask, buzzer_threshold_L, buzzer_threshold_H
-extrn	init_LCD, send_data, send_command, CS1, CS2, colon, compare_number, dot, degrees, letterC, spaces_bitmap
-global	high_hour, page_counter, page_pointer
+extrn	init_LCD, send_data, send_command, CS1, CS2, colon, compare_number, dot, degrees, letterC, spaces_bitmap,  letterT, letterC, lettert, letterE,letterM,letterP,letterR,letterU,letterA,letterI
+global	high_hour, page_counter, page_pointer, DELAY
     
 psect	udata_acs   ; reserve data space in access ram
 counter:    ds 1    ; reserve one byte for a counter variable
@@ -63,6 +63,9 @@ int:	org 0x0008  ;high vector
 	; ******* Programme FLASH read Setup Code ***********************
 setup:	bcf	CFGS	; point to Flash program memory  
 	bsf	EEPGD 	; access Flash program memory
+	call	keypad_setup
+	call	keypad_read
+
 	;interrupt
 	banksel INTCON
 	bsf	INTCON, 7, A	;enable global interrupt
@@ -76,25 +79,50 @@ setup:	bcf	CFGS	; point to Flash program memory
 	;call	LCD_Setup	; setup UART
 	call	RTCC_Setup	; setup RTCC
 	call	ADC_Setup
-	call	keypad_setup
+	
 	;clrf	TRISD, A	; set portD as digital output for seconds display
 	clrf	TRISJ, A
 	;initialise GLCD
 	call	init_LCD
-	bcf	PORTB, CS2 ;
-	nop
-	bsf	PORTB, CS1;set CS2 active
-	nop
-	call	clear_display
 	bcf	PORTB, CS1
 	nop
 	bsf	PORTB, CS2;set CS1 active
 	nop
 	call	clear_display
+	movlw	0xB8 ; set to page 0 (x-address)
+	call	send_command
+	movlw	0x40 ; set to strip 0 in page (y-address)
+	call	send_command
+	call	spaces_bitmap
+	call	spaces_bitmap
+	call	letterT
+	call	letterI
+	call	letterM
+	call	letterE
+	call	spaces_bitmap
+	call	spaces_bitmap
+	
+	;set CS2 active, display temp
+	bcf	PORTB, CS2 ;
+	nop
+	bsf	PORTB, CS1;set CS2 active
+	nop
+	call	clear_display
+	movlw	0xB8 ; set to page 0 (x-address)
+	call	send_command
+	movlw	0x40 ; set to strip 0 in page (y-address)
+	call	send_command
+	call	spaces_bitmap
+	call	spaces_bitmap
+	call	letterT
+	call	letterE
+	call	letterM
+	call	letterP
+	call	spaces_bitmap
+	call	spaces_bitmap
+
 	movlw	0xB8
 	movwf	page_pointer, A
-	call	keypad_read
-
 	clrf	TRISH            ; Configure PORTH as output for buzzer
         clrf	PORTH           ; Clear PORTH (all pins LOW)
 	goto	loop
@@ -121,7 +149,7 @@ GLCD_print_high_hour:
 	nop
 	bsf	PORTB, CS2;set CS1 active
 	nop
-
+	
 	movf    page_pointer, W, A ; 
 	call	send_command
 
@@ -168,7 +196,7 @@ page_setup:
 	movlw	0xBF
 	cpfseq	page_pointer,A
 	bra     not_last_page
-	movlw	0xB8
+	movlw	0xB9 ;start from second page
 	movwf	page_pointer, A
 	return
 	    
