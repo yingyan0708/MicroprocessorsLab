@@ -11,29 +11,29 @@ alarm_mask:	ds	1
 
 psect	 uart_code, class=CODE
 keypad_setup:
-    banksel PADCFG1
-    bsf	    REPU
-    clrf    LATE, A
-    clrf    TRISJ, A
+    banksel PADCFG1 ;select bank RAM
+    bsf	    REPU ;set REPU pin to 1
+    clrf    LATE, A ;clear latch
+    clrf    TRISJ, A ;set PORTJ as output, for debugging purpose
     return
     
 keypad_read:
-    movlw   0x0F	
+    movlw   0x0F    ;configure PORTE pin 4-7 as outputs and pin 0-3 as inputs
     movwf   TRISE, A
-    call    KeyPad_delay
-    movf    PORTE, W, A
-    movwf   ROW, A
-    movlw   0xF0
-    movwf   TRISE, A
-    call    KeyPad_delay
-    movf    PORTE, W, A
-    addwf   ROW, F, A
-    bra	    check_1
+    call    KeyPad_delay ;call delay for voltage on output pins to settle
+    movf    PORTE, W, A    ;move output from PORTE to W register
+    movwf   ROW, A    ;save output in ROW file register
+    movlw   0xF0    ;configure PORTE pin 4-7 as inputs and pin 0-3 as outputs
+    movwf   TRISE, A    
+    call    KeyPad_delay    ;call delay for output pins to settle
+    movf    PORTE, W, A    ;move output from PORTE to W register
+    addwf   ROW, F, A    ;add W register with value stored in ROW, save the results in ROW file register
+    bra	    check_1    ;decode the output value to check which button was pressed
     ;return
     
 check_1:
-    movlw   01110111B ;1
-    cpfseq  ROW, A
+    movlw   01110111B ;decode for 1
+    cpfseq  ROW, A    ;compare if the value is the same as W register, skip next instruction if it is equal
     bra	    check_2
     movlw   0x00
     movwf   buzzer_threshold_H, A
