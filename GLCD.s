@@ -8,10 +8,10 @@ LCD_cnt_h:	ds 1   ; reserve 1 byte for variable LCD_cnt_h
 bcd_temp:	ds 1
 RS  EQU	2 ;port B is control line
 R   EQU 3 ;RW
-EN  EQU	4
-CS1 EQU	0
-CS2 EQU	1
-RST EQU	5
+EN  EQU	4 ;EN
+CS1 EQU	0 ;CS1
+CS2 EQU	1 ;CS2
+RST EQU	5 ;RESET
 
 psect	glcd,class=CODE
    
@@ -23,9 +23,9 @@ init_LCD:
 	clrf	TRISD, A ;Set all PORTD pins as outputs (data lines)
 	clrf	TRISB, A
 
-	bcf	PORTB, RST
+	bcf	PORTB, RST ;set reset pin
 	nop ;delay
-	bsf	PORTB, RST
+	bsf	PORTB, RST ;clear reset pin
 	nop ;delay
 
 	movlw	0x3F ; Function Set: 8-bit, 128x64 resolution, normal display
@@ -60,7 +60,7 @@ send_command: ;RS and R/W are both 0 when sending command
 	nop
 	nop
 	nop
-	bcf	PORTB, EN
+	bcf	PORTB, EN ;clear enable pin
 	nop
 	nop
 	nop
@@ -95,7 +95,7 @@ send_data: ;when writing/sending data, RS pin is set to 1
 	bcf	PORTB, R
 	nop
 	movwf	PORTD ;place data on port D
-	bsf	PORTB, EN
+	bsf	PORTB, EN ;set enable
 	nop
 	nop
 	nop
@@ -120,7 +120,7 @@ send_data: ;when writing/sending data, RS pin is set to 1
 	nop
 	nop
 	nop
-	bcf	PORTB, EN
+	bcf	PORTB, EN ;clear enable
 	nop
 	nop
 	nop
@@ -148,7 +148,7 @@ send_data: ;when writing/sending data, RS pin is set to 1
 	nop
 	nop
 	movlw	10
-	call	LCD_delay_x4us
+	call	LCD_delay_x4us 
 	return
 
 LCD_delay_x4us:		    ; delay given in chunks of 4 microsecond in W
@@ -169,7 +169,7 @@ lcdlp1:	decf 	LCD_cnt_l, F, A	; no carry when 0x00 -> 0xff
 	bc 	lcdlp1		; carry, then loop again
 	return			; carry reset so return
 
-compare_number:
+compare_number: ;compare ascii and print corresponding bitmap
         movwf     bcd_temp, A
         bra       check_0
 
@@ -242,8 +242,9 @@ check_9:
               nop 
               call      num9
               return	
-	
-num0:
+
+;bitmaps	
+num0: 
     movlw   00000000B
     call    send_data
     movlw   01111110B
