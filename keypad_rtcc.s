@@ -13,7 +13,7 @@ psect	 uart_code, class=CODE
 keypad_setup:
     banksel PADCFG1 ;select bank RAM
     bsf	    REPU ;set REPU pin to 1
-    clrf    LATE, A ;clear latch
+    clrf    LATE, A ;clear latch on PORT E
     clrf    TRISJ, A ;set PORTJ as output, for debugging purpose
     return
     
@@ -72,7 +72,7 @@ null:
     movlw   11111111B
     cpfseq  ROW, A
     return
-    goto    keypad_read
+    goto    keypad_read ;no button pressed, keep looping
    
 
   
