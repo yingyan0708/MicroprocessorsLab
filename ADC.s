@@ -31,7 +31,7 @@ ADC_Setup:
 	return
 	
 multiplication:
-	movlw	0x418A
+	movlw	0x418A ;k value
 	andlw	0xFF
 	movwf	ARG2L, A
 	movlw   high(0x418A)
@@ -70,18 +70,18 @@ multiplication:
 	
 mul24and8:
 	MOVLW	0x0A
-	MULWF	RES0; ARG1L * ARG2L-> ; PRODH:PRODL 
+	MULWF	RES0
 	MOVFF	PRODH, NRES1 ; 
 	MOVFF	PRODL, NRES0 
 	;
 	MOVLW	0x0A
-	MULWF	RES1; ARG1L * ARG2L-> ; PRODH:PRODL 
+	MULWF	RES1
 	MOVF	PRODL, W ;
-	ADDWF	NRES1, F ; Add cross 
+	ADDWF	NRES1, F  
 	MOVFF	PRODH, NRES2 ; 
 	;
 	MOVLW	0x0A
-	MULWF	RES2 ; ARG1L * ARG2L-> ; PRODH:PRODL 
+	MULWF	RES2  
 	MOVF	PRODL, W ;
 	ADDWFC	NRES2, F
 	MOVFF	PRODH, NRES3 ;
