@@ -32,68 +32,68 @@ RTCC_Setup:
 RTCC_Get_Seconds:	; Reads and stores seconds value in RTCC_Seconds
 			; Also returns the value in W register
     banksel RTCCFG	; RTCC SFRs are not in access ram
-    ;read year (RTCPTR = 11)
-    BCF	   RTCPTR1	; Clear RTCPTR1 and RTCPTR0 for seconds output
+    ;read second and minute(RTCPTR = 00)
+    bcf	   RTCPTR1	; Clear RTCPTR1 and RTCPTR0 for seconds output
     bcf	    RTCPTR0
-    movf    RTCVALL,W,B ;Read minutes from RTCVALH 
+    movf    RTCVALL,W,B ;Read second from RTCVALL
     ;movwf   RTCC_seconds, A ; Store value in RTCC_Seconds variable space
     ;movf    RTCVALH, W, B   ; Read minutes from RTCVALH 
     ;movwf   RTCC_minutes, A	; Store value in RTCC_Minutes variable space
     movlb   0		; reset BSR to 0
     return
 
-RTCC_Get_Minutes:	; Reads and stores seconds value in RTCC_Seconds
+RTCC_Get_Minutes:	; Reads and stores minute value in RTCC_minutes
 			; Also returns the value in W register
     banksel RTCCFG	; RTCC SFRs are not in access ram
-    bcf	    RTCPTR1	; Clear RTCPTR1 and RTCPTR0 for seconds output
+    bcf	    RTCPTR1	; Clear RTCPTR1 and RTCPTR0 for minute output
     bcf	    RTCPTR0
     movf    RTCVALH, W, B   ; Read minutes from RTCVALH 
     movlb   0		; reset BSR to 0
     return
     
-RTCC_Get_Hours:	; Reads and stores seconds value in RTCC_Seconds
+RTCC_Get_Hours:	; Reads and stores hours value in RTCC_hours
 			; Also returns the value in W register
     banksel RTCCFG	; RTCC SFRs are not in access ram
-    bcf	    RTCPTR1	; Clear RTCPTR1 and RTCPTR0 for seconds output
+    bcf	    RTCPTR1	; Clear RTCPTR1 and set RTCPTR0 for hours output
     bsf	    RTCPTR0
-    movf    RTCVALL, W, B   ; Read minutes from RTCVALH 
+    movf    RTCVALL, W, B   ; Read hours from RTCVALL
     movlb   0		; reset BSR to 0
     return
    
     
-RTCC_Get_Weekday:	; Reads and stores seconds value in RTCC_Seconds
+RTCC_Get_Weekday:	; Reads and stores weekday
 			; Also returns the value in W register
     banksel RTCCFG	; RTCC SFRs are not in access ram
-    bcf	    RTCPTR1	; Clear RTCPTR1 and RTCPTR0 for seconds output
+    bcf	    RTCPTR1	; Clear RTCPTR1 and set RTCPTR0 for weekday output
     bsf	    RTCPTR0
-    movf    RTCVALH, W, B   ; Read minutes from RTCVALH 
+    movf    RTCVALH, W, B   ; Read weekday from RTCVALH 
     movlb   0		; reset BSR to 0
     return
 
-RTCC_Get_Day:	; Reads and stores seconds value in RTCC_Seconds
+RTCC_Get_Day:	; Reads and stores day value 
 			; Also returns the value in W register
     banksel RTCCFG	; RTCC SFRs are not in access ram
-    bsf	    RTCPTR1	; Clear RTCPTR1 and RTCPTR0 for seconds output
+    bsf	    RTCPTR1	; set RTCPTR1 and clear RTCPTR0 for day output
     bcf	    RTCPTR0
-    movf    RTCVALL, W, B   ; Read minutes from RTCVALH 
+    movf    RTCVALL, W, B   ; Read day from RTCVALL
     movlb   0		; reset BSR to 0
     return
     
-RTCC_Get_Month:	; Reads and stores seconds value in RTCC_Seconds
+RTCC_Get_Month:	; Reads and stores month value 
 			; Also returns the value in W register
     banksel RTCCFG	; RTCC SFRs are not in access ram
-    bsf	    RTCPTR1	; Clear RTCPTR1 and RTCPTR0 for seconds output
+    bsf	    RTCPTR1	; set RTCPTR1 and clear RTCPTR0 for month output
     bcf	    RTCPTR0
-    movf    RTCVALH, W, B   ; Read minutes from RTCVALH 
+    movf    RTCVALH, W, B   ; Read month from RTCVALH 
     movlb   0		; reset BSR to 0
     return
 
-RTCC_Get_Year:	; Reads and stores seconds value in RTCC_Seconds
+RTCC_Get_Year:	; Reads and stores year value
 			; Also returns the value in W register
     banksel RTCCFG	; RTCC SFRs are not in access ram
-    bsf	    RTCPTR1	; Clear RTCPTR1 and RTCPTR0 for seconds output
+    bsf	    RTCPTR1	; set RTCPTR1 and set RTCPTR0 for year output
     bsf	    RTCPTR0
-    movf    RTCVALL, W, B   ; Read minutes from RTCVALH 
+    movf    RTCVALL, W, B   ; Read year from RTCVALL
     movlb   0		; reset BSR to 0
     return
 
@@ -109,7 +109,7 @@ RTCC_set_seconds:
     bcf	    RTCPTR1	; Clear RTCPTR1 and RTCPTR0 for seconds output
     bcf	    RTCPTR0
     movlw   00000000B
-    movwf   RTCVALL, B   ; Read minutes from RTCVALH 
+    movwf   RTCVALL, B   ; rewrite second register 
     return
     
 RTCC_set_minutes:
@@ -119,28 +119,28 @@ RTCC_set_minutes:
     movwf   EECON2
     banksel RTCCFG
     bsf	    RTCCFG, 5, B ;enable RTCWREN
-    bcf	    RTCPTR1	; Clear RTCPTR1 and RTCPTR0 for seconds output
+    bcf	    RTCPTR1	; Clear RTCPTR1 and RTCPTR0 for minute output
     bcf	    RTCPTR0
     movlw   00010100B
-    movwf   RTCVALH, B   ; Read minutes from RTCVALH 
+    movwf   RTCVALH, B   ; rewrite minute
     return
     
 RTCC_set_hours:
     banksel RTCCFG
     bsf	    RTCCFG, 5, B ;enable RTCWREN
-    bcf	    RTCPTR1	; Clear RTCPTR1 and RTCPTR0 for seconds output
+    bcf	    RTCPTR1	; Clear RTCPTR1 and set RTCPTR0 for hour
     bsf	    RTCPTR0
     movlw   00010011B
-    movwf   RTCVALL, B   ; set hours from RTCVALH 
+    movwf   RTCVALL, B   ; set hours from RTCVALL
     return
     
 RTCC_set_day:
     banksel RTCCFG
     bsf	    RTCCFG, 5, B ;enable RTCWREN
-    bsf	    RTCPTR1	; Clear RTCPTR1 and RTCPTR0 for seconds output
+    bsf	    RTCPTR1	; set RTCPTR1 and clear RTCPTR0 for day value
     bcf	    RTCPTR0
     movlw   00010011B
-    movwf   RTCVALL, B   ; Read minutes from RTCVALH 
+    movwf   RTCVALL, B   ; rewrite day in RTCVALL register
     return
     
 RTCC_set_weekday:
@@ -150,28 +150,28 @@ RTCC_set_weekday:
     movwf   EECON2
     banksel RTCCFG
     bsf	    RTCCFG, 5, B ;enable RTCWREN
-    bcf	    RTCPTR1	; Clear RTCPTR1 and RTCPTR0 for seconds output
+    bcf	    RTCPTR1	; Clear RTCPTR1 and set RTCPTR0 for weekday
     bsf	    RTCPTR0
     movlw   00000101B
-    movwf   RTCVALH, B   ; Read minutes from RTCVALH 
+    movwf   RTCVALH, B   ; rewrite weekday
     return
     
 RTCC_set_month:
     banksel RTCCFG
     bsf	    RTCCFG, 5, B ;enable RTCWREN
-    bsf	    RTCPTR1	; Clear RTCPTR1 and RTCPTR0 for seconds output
+    bsf	    RTCPTR1	; set RTCPTR1 and clear RTCPTR0 for month 
     bcf	    RTCPTR0
     movlw   00010010B
-    movwf   RTCVALH, B   ; Read minutes from RTCVALH 
+    movwf   RTCVALH, B   ; rewrite month register
     return
     
 RTCC_set_year:
     banksel RTCCFG
     bsf	    RTCCFG, 5, B ;enable RTCWREN
-    bsf	    RTCPTR1	; Clear RTCPTR1 and RTCPTR0 for seconds output
+    bsf	    RTCPTR1	; set RTCPTR1 and set RTCPTR0 for year
     bsf	    RTCPTR0
     movlw   00100100B
-    movwf   RTCVALL, B   ; Read minutes from RTCVALH 
+    movwf   RTCVALL, B   ; rewrite year
     return
     
     
