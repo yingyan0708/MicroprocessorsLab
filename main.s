@@ -1,13 +1,10 @@
 #include <xc.inc>
 
-extrn	UART_Setup, UART_Transmit_Message  ; external subroutines
+extrn	UART_Setup, UART_Transmit_Message  ; import external subroutines
 extrn	LCD_Setup, LCD_Write_Message, first_line, second_line
 extrn	RTCC_Setup, RTCC_Get_Seconds,  RTCC_Get_Minutes, RTCC_Get_Hours, RTCC_Get_Weekday, RTCC_Get_Day, RTCC_Get_Month, RTCC_Get_Year, RTCC_alarm_get_minutes
 extrn	low_nibble_ASCII, high_nibble_ASCII, bcd_to_ascii
 extrn	ADC_Setup, ADC_Read, multiplication, mul24and8, RES3, RES0, RES1, RES2,  ARG2H, ARG2L, NRES0, NRES1, NRES2, NRES3	   ; external ADC subroutines
-;extrn	data_logger, temp_data
-;extrn	new_data_logger
-;extrn	_start, PWMOn, Delay1Second, PWMOff 
 extrn	keypad_setup, keypad_read, alarm_mask, buzzer_threshold_L, buzzer_threshold_H
 extrn	init_LCD, send_data, send_command, CS1, CS2, colon, compare_number, dot, degrees, letterC, spaces_bitmap,  letterT, letterC, lettert, letterE,letterM,letterP,letterR,letterU,letterA,letterI
 global	high_hour, page_counter, page_pointer, DELAY
@@ -15,13 +12,13 @@ global	high_hour, page_counter, page_pointer, DELAY
 psect	udata_acs   ; reserve data space in access ram
 counter:    ds 1    ; reserve one byte for a counter variable
 delay_count:ds 1    ; reserve one byte for counter in the delay routine
-colons:	    ds 1
-dash:	    ds 1
-spaces:	    ds 1
-dot_ASCII:	    ds 1
-R1:	    ds 1
-R2:	    ds 1
-R3:	    ds 1
+colons:	    ds 1	; reserve one byte for colons
+dash:	    ds 1	; reserve one byte for dash
+spaces:	    ds 1	; reserve one byte for spaces
+dot_ASCII:	    ds 1	;reserve one byte for dot in ASCII
+R1:	    ds 1	; reserve one byte for first digit in temp reading
+R2:	    ds 1	; reserve one byte for second digit in temp reading
+R3:	    ds 1	; reserve one byte for third digit in temp reading
 count:	    ds 1   
 page_counter:	ds  1
 page_pointer:	ds 1
@@ -47,8 +44,8 @@ dataArray:    ds 0x100 ; reserve 128 bytes for message data
 
 psect	data    
 	; ******* myTable, data in programme memory, and its length *****
-myTable:
-	db	'H','e','l','l','o',' ','W','o','r','l','d','!',0x0a
+myTable: ;not used, only for testing
+	db	'H','e','l','l','o',' ','W','o','r','l','d','!',0x0a ;not used
 					; message, plus carriage return
 	myTable_l   EQU	26	; length of data
 	align	2
@@ -58,13 +55,13 @@ rst: 	org 0x0
  	goto	setup
 	
 int:	org 0x0008  ;high vector
-	goto	RTCC_ISR
+	goto	RTCC_ISR ;RTCC interrupt 
 
 	; ******* Programme FLASH read Setup Code ***********************
 setup:	bcf	CFGS	; point to Flash program memory  
 	bsf	EEPGD 	; access Flash program memory
-	call	keypad_setup
-	call	keypad_read
+	call	keypad_setup ;setup keypad
+	call	keypad_read ;read button pressed
 
 	;interrupt
 	banksel INTCON
@@ -76,24 +73,22 @@ setup:	bcf	CFGS	; point to Flash program memory
 	bcf	PIR3, 0, A  ;clear RTCC interrupt flag
 	;
 	call	UART_Setup	; setup UART
-	;call	LCD_Setup	; setup UART
 	call	RTCC_Setup	; setup RTCC
-	call	ADC_Setup
+	call	ADC_Setup	; setup ADC
 	
-	;clrf	TRISD, A	; set portD as digital output for seconds display
-	clrf	TRISJ, A
+	clrf	TRISJ, A	;clear port J
 	;initialise GLCD
-	call	init_LCD
+	call	init_LCD ;initialise GLCD
 	bcf	PORTB, CS1
 	nop
-	bsf	PORTB, CS2;set CS1 active
+	bsf	PORTB, CS2 ;set CS1 active
 	nop
-	call	clear_display
+	call	clear_display ;clear GLCD screen
 	movlw	0xB8 ; set to page 0 (x-address)
 	call	send_command
 	movlw	0x40 ; set to strip 0 in page (y-address)
-	call	send_command
-	call	spaces_bitmap
+	call	send_command 
+	call	spaces_bitmap ;write title to left half of screen
 	call	spaces_bitmap
 	call	letterT
 	call	letterI
@@ -112,7 +107,7 @@ setup:	bcf	CFGS	; point to Flash program memory
 	call	send_command
 	movlw	0x40 ; set to strip 0 in page (y-address)
 	call	send_command
-	call	spaces_bitmap
+	call	spaces_bitmap ;write title to right half of screen
 	call	spaces_bitmap
 	call	letterT
 	call	letterE
@@ -129,19 +124,16 @@ setup:	bcf	CFGS	; point to Flash program memory
 	
 	; ******* Main programme ****************************************
 loop:		
-	;call	init_LCD
 	call	ADC_Read
-	;movlw	0x00         ; Load high byte of 0x12C (0x012C)
-	movf	buzzer_threshold_H, W, A
-        cpfslt	ADRESH       ; Compare ADRESH with 0x01, skip if ADRESH < 0x01
-	call	check_ADRESL
+	movf	buzzer_threshold_H, W, A 
+        cpfslt	ADRESH       ; Compare ADRESH with high bits of threshold, skip if ADRESH is less than it
+	call	check_ADRESL ; check ADRESL
 	goto	loop
 	
 check_ADRESL:
-	;movlw	0xFA
 	movf	buzzer_threshold_L, W, A
-	cpfslt	ADRESL  ; Compare ADRESL with 0x2C, skip if ADRESH < 0x2C
-	call	Buzzer
+	cpfslt	ADRESL  ; Compare ADRESL with lower bits of threshold, skip if ADRESH is less than
+	call	Buzzer	;activate the buzzer if both ADRESH and ADRESL are greater than threshold
 	return
 
 GLCD_print_high_hour:
@@ -150,57 +142,57 @@ GLCD_print_high_hour:
 	bsf	PORTB, CS2;set CS1 active
 	nop
 	
-	movf    page_pointer, W, A ; 
-	call	send_command
+	movf    page_pointer, W, A ;set page pointer
+	call	send_command 
 
 	movlw	0x40 ; set to strip 0 in page (y-address)
 	call	send_command
 	movf	high_hour, W, A
-	call	compare_number
+	call	compare_number ;find corresponding bit map, print high bits of hour value
 	goto	GLCD_print_low_hour
 	
 GLCD_print_low_hour:
 	movf	low_hour, W, A
-	call	compare_number
+	call	compare_number ;find corresponding bit map, print low bits of hour value
 	goto	GLCD_print_colon_1
 	
 GLCD_print_colon_1:
-	call	colon
+	call	colon ;print colon bitmap
 	goto	GLCD_print_high_minute
 
 GLCD_print_high_minute:
 	movf	high_minute, W, A
-	call	compare_number
+	call	compare_number ;find corresponding bit map, print high bits of minute value
 	goto	GLCD_print_low_minute
 	
 GLCD_print_low_minute:
 	movf	low_minute, W, A
-	call	compare_number
+	call	compare_number ;find corresponding bit map, print low bits of minute value
 	goto	GLCD_print_colon_2
 
 GLCD_print_colon_2:
-	call	colon
+	call	colon ;print colon bitmap
 	goto	GLCD_print_high_second
 	
 GLCD_print_high_second:
 	movf	high_second, W, A
-	call	compare_number
+	call	compare_number ;find corresponding bit map, print high bits of second value
 	goto	GLCD_print_low_second
 
 GLCD_print_low_second:
 	movf	low_second, W, A
-	call	compare_number
+	call	compare_number ;find corresponding bit map, print low bits of second value
 	return
 
 page_setup:
 	movlw	0xBF
-	cpfseq	page_pointer,A
+	cpfseq	page_pointer,A ;compare pointer variable with W register, skip if they are equal
 	bra     not_last_page
-	movlw	0xB9 ;start from second page
+	movlw	0xB9 ;start from second page (title is at first page), rewrite the display
 	movwf	page_pointer, A
 	return
 	    
-not_last_page:; Increment the counter
+not_last_page: ; Increment the counter
 	incf    page_pointer, F
 	return
 	
@@ -217,90 +209,79 @@ GLCD_print_temp_value:
 	call	spaces_bitmap
 	call	spaces_bitmap
 	movf	temp_reading_1, W, A
-	call	compare_number
+	call	compare_number ;print first digit of temp reading
 	goto	GLCD_print_temp_value_2
 GLCD_print_temp_value_2:
 	movf	temp_reading_2, W, A
-	call	compare_number
+	call	compare_number ;print second digit of temp reading
 	goto	GLCD_print_dot
 GLCD_print_dot:
-	call	dot
+	call	dot ;print dot
 	goto	GLCD_print_temp_value_3
 GLCD_print_temp_value_3:
-	movf	temp_reading_3, W, A
+	movf	temp_reading_3, W, A ;print third digit of temp reading
 	call	compare_number
 	goto	GLCD_print_degree
 GLCD_print_degree:
-	call	degrees
+	call	degrees ;print degree bitmap
 	goto	GLCD_print_C
 GLCD_print_C:
-	call	letterC
+	call	letterC ;print letter C bitmap
 	return
-
-    
-    
-    
-	
-    
-
-
 	
 	
 loop_clock_read:
-	movlw	0x20
+	movlw	0x20 ;ASCII code for space
 	movwf	spaces, A
-	;call	first_line
-	;read year
-	call	RTCC_Get_Year
+	call	RTCC_Get_Year ;get year value
 	call	bcd_to_ascii ;convert BCD to ASCII
-	movff	high_nibble_ASCII, myArray + 1
-	movff	low_nibble_ASCII, myArray + 2
-	movff	spaces, POSTINC0
-	movff	high_nibble_ASCII, POSTINC0
-	movff	low_nibble_ASCII, POSTINC0
+	movff	high_nibble_ASCII, myArray + 1 ;test using LCD
+	movff	low_nibble_ASCII, myArray + 2 ;test
+	movff	spaces, POSTINC0 ;to export to UART
+	movff	high_nibble_ASCII, POSTINC0 ;to export to UART
+	movff	low_nibble_ASCII, POSTINC0 ;to export to UART
 
-	
 	
 	;dash
 	movlw	0x2D
 	movwf	dash, A
-	movff	dash, myArray + 3
-	movff	dash, POSTINC0
+	movff	dash, myArray + 3 ;test
+	movff	dash, POSTINC0 ;to export to UART
 	
 	;read month
 	call	RTCC_Get_Month
 	call	bcd_to_ascii ;convert BCD to ASCII
-	movff	high_nibble_ASCII, myArray + 4
-	movff	low_nibble_ASCII, myArray + 5
-	movff	high_nibble_ASCII, POSTINC0
-	movff	low_nibble_ASCII, POSTINC0
+	movff	high_nibble_ASCII, myArray + 4 ;test
+	movff	low_nibble_ASCII, myArray + 5 ;test
+	movff	high_nibble_ASCII, POSTINC0 ;to export to UART
+	movff	low_nibble_ASCII, POSTINC0 ;to export to UART
 	
-	movff	dash, myArray + 6
-	movff	dash, POSTINC0
+	movff	dash, myArray + 6 ;test
+	movff	dash, POSTINC0 ;to export to UART
 	
 	;read day
 	call	RTCC_Get_Day
 	call	bcd_to_ascii ;convert BCD to ASCII
-	movff	high_nibble_ASCII, myArray + 7
-	movff	low_nibble_ASCII, myArray + 8
-	movff	high_nibble_ASCII, POSTINC0
-	movff	low_nibble_ASCII, POSTINC0
-	movff	spaces, POSTINC0
+	movff	high_nibble_ASCII, myArray + 7 ;test
+	movff	low_nibble_ASCII, myArray + 8 ;test
+	movff	high_nibble_ASCII, POSTINC0 ;to export to UART
+	movff	low_nibble_ASCII, POSTINC0 ;to export to UART
+	movff	spaces, POSTINC0 ;to export to UART
 	
 	;movlw	9
 	;lfsr	2, myArray
-	;call	LCD_Write_Message
+	;call	LCD_Write_Message ;test using LCD
 	
 	;read hour
 	;call	second_line
-	call	RTCC_Get_Hours    ; returns seconds value in W
+	call	RTCC_Get_Hours    ; returns hour value in W
 	call	bcd_to_ascii ;convert BCD to ASCII
 	movff	high_nibble_ASCII, myArray 
 	movff	low_nibble_ASCII, myArray + 1
-	movff	high_nibble_ASCII, high_hour
-	movff	low_nibble_ASCII, low_hour
-	movff	high_nibble_ASCII, POSTINC0
-	movff	low_nibble_ASCII, POSTINC0
+	movff	high_nibble_ASCII, high_hour ;for GLCD display
+	movff	low_nibble_ASCII, low_hour ;for GLCD display
+	movff	high_nibble_ASCII, POSTINC0 ;UART
+	movff	low_nibble_ASCII, POSTINC0 ;UART
 	
 	;lfsr	0, dataArray
 	;movff	high_nibble_ASCII, POSTINC0
@@ -309,32 +290,32 @@ loop_clock_read:
 	movlw	0x3A	;ascii code for :
 	movwf	colons, A
 	movff	colons, myArray + 2
-	movff	colons, POSTINC0
+	movff	colons, POSTINC0 ;UART
 	
 	call	RTCC_Get_Minutes    ; returns seconds value in W
 	call	bcd_to_ascii ;convert BCD to ASCII
-	movff	high_nibble_ASCII, myArray + 3
-	movff	low_nibble_ASCII, myArray + 4
-	movff	high_nibble_ASCII, high_minute
-	movff	low_nibble_ASCII, low_minute
-	movff	high_nibble_ASCII, POSTINC0
-	movff	low_nibble_ASCII, POSTINC0
+	movff	high_nibble_ASCII, myArray + 3	
+	movff	low_nibble_ASCII, myArray + 4	
+	movff	high_nibble_ASCII, high_minute	;for GLCD display
+	movff	low_nibble_ASCII, low_minute	;for GLCD display
+	movff	high_nibble_ASCII, POSTINC0 ;UART
+	movff	low_nibble_ASCII, POSTINC0 ;UART
 
-	movff	colons, myArray + 5
-	movff	colons, POSTINC0
+	movff	colons, myArray + 5	;test
+	movff	colons, POSTINC0	;UART
 	
-	call	RTCC_Get_Seconds
+	call	RTCC_Get_Seconds ;get seconds value in BCD
 	call	bcd_to_ascii
-	movff	high_nibble_ASCII, myArray + 6
-	movff	low_nibble_ASCII, myArray + 7
-	movff	high_nibble_ASCII, high_second
-	movff	low_nibble_ASCII, low_second
-	movff	high_nibble_ASCII, POSTINC0
-	movff	low_nibble_ASCII, POSTINC0
+	movff	high_nibble_ASCII, myArray + 6 ;test
+	movff	low_nibble_ASCII, myArray + 7 ;test
+	movff	high_nibble_ASCII, high_second	;for GLCD display
+	movff	low_nibble_ASCII, low_second	;for GLCD display
+	movff	high_nibble_ASCII, POSTINC0	;UART
+	movff	low_nibble_ASCII, POSTINC0	;UART
 	
 
-	movff	spaces, myArray + 8
-	movff	spaces, POSTINC0
+	movff	spaces, myArray + 8	;test using LCD
+	movff	spaces, POSTINC0	;UART
 	;just to print alarm value
 	;call	RTCC_alarm_get_minutes
 	;call	bcd_to_ascii
@@ -345,35 +326,35 @@ loop_clock_read:
 	;movwf	PORTE, A
 	return
 	
-	; a delay subroutine if you need one, times around loop in delay_count
+	; a delay subroutine, times around loop in delay_count
 delay:	decfsz	delay_count, A	; decrement until zero
 	bra	delay
 	return
 
 RTCC_ISR: ;RTCC interrupt service routine
-	lfsr	0, dataArray
+	lfsr	0, dataArray 
 	banksel	PIR3
 	btfss	PIR3, 0, A ;bit test file, skip if alarm interrupt flag is set
 	retfie	f ;return from interrupt
 	;
 	bcf	PIR3, 0, A ;clear alarm interrupt flag
 	;perform action
-	incf	LATJ, F, A	; increment PORTD
-	call	loop_clock_read
-	call	ADC_Read
-	call	page_setup
-	call	GLCD_print_high_hour
-	call	GLCD_print_temp_value
-	call    multiplication
-	call	mul24and8
+	incf	LATJ, F, A	; increment PORTJ
+	call	loop_clock_read ;read clock
+	call	ADC_Read	;read ADC
+	call	page_setup	;set up page address
+	call	GLCD_print_high_hour	;write bitmap to GLCD
+	call	GLCD_print_temp_value	;write bitmap to GLCD
+	call    multiplication	;multiplication between 16bit and 16bit
+	call	mul24and8	;multiplication between 24bit and 8bit
 	;movlw	0x0043		; scaling factor for temperature conversion
 	;call	multiplication
 	;call	mul24and8
 	movlw	0x30		; ASCII code conversion
-	addwf	RES3, F, A
+	addwf	RES3, F, A	
 	movff	RES3, myArray + 9
-	movff	RES3, temp_reading_1
-	movff	RES3, POSTINC0
+	movff	RES3, temp_reading_1	;for GLCD display
+	movff	RES3, POSTINC0	;UART
 	
 	call	mul24and8
 	movlw	0x30
@@ -409,11 +390,11 @@ RTCC_ISR: ;RTCC interrupt service routine
 	retfie  f ;return from interrupt
 	
 Buzzer:
-	bsf	LATH, 0           ; Set RB0 HIGH (turn ON buzzer)
-        call	DELAY            ; Wait for a period
-        bcf	LATH, 0           ; Set RB0 LOW (turn OFF buzzer)
+	bsf	LATH, 0           ; Set RH0 HIGH (turn ON buzzer)
+        call	DELAY            ; Wait for a period - one second
+        bcf	LATH, 0           ; Set RH0 LOW (turn OFF buzzer)
 	
-DELAY:
+DELAY: ;delay for approx 1 second
 	MOVLW 0x3D            ; Outermost loop count (~61 iterations)
 	MOVWF R3              ; Store in R3
 DELAY_OUTER3:
@@ -433,7 +414,7 @@ DELAY_INNER:
 	GOTO DELAY_OUTER3     ; Repeat outermost loop (2 cycles)
 	RETURN                ; Return to main program
 
-clear_display:
+clear_display: ;clear GLCD display
 	; Clear pages and reset cursor for each page (0xB8 to 0xBF)
 	movlw	0xB8 ; Set to page 0 (x-address)
 	call	send_command
